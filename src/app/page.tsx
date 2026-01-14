@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { useSession, signOut } from '@/lib/auth-client'
+import { useRouter } from 'next/navigation'
 import { useTTS } from '@/hooks/useTTS'
 import { ReadAnswerButton } from '@/components/ReadAnswerButton'
 
@@ -16,14 +18,27 @@ interface Quota {
 }
 
 export default function Home() {
+  const { data: session } = useSession()
+  const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [autoRead, setAutoRead] = useState(false) // Default OFF
   const [quota, setQuota] = useState<Quota | null>(null)
   const [quotaExceeded, setQuotaExceeded] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const previousResponseRef = useRef<string | undefined>(undefined)
+
+  // Get user role for redirect after logout
+  const userRole = (session?.user as { role?: string } | undefined)?.role
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    await signOut()
+    // Redirect based on role
+    router.push(userRole === 'senior' ? '/auth/senior' : '/auth/family')
+  }
 
   // Kokoro TTS hook
   const { speak, stop: stopSpeaking, isSpeaking, isReady: ttsReady, status: ttsStatus } = useTTS()
@@ -199,6 +214,29 @@ export default function Home() {
               {autoRead ? 'On' : 'Off'}
             </span>
           </button>
+
+          {/* Subtle logout - lowkey for seniors */}
+          {session?.user && (
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="flex items-center justify-center rounded-full transition-all"
+              style={{
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-muted)',
+                minHeight: '44px',
+                minWidth: '44px',
+              }}
+              aria-label="Sign out"
+              title="Sign out"
+            >
+              {isLoggingOut ? (
+                <LoadingSpinner className="w-4 h-4" />
+              ) : (
+                <LogoutIcon className="w-4 h-4" />
+              )}
+            </button>
+          )}
         </div>
       </header>
 
@@ -729,6 +767,14 @@ function RefreshIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
       <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+    </svg>
+  )
+}
+
+function LogoutIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
     </svg>
   )
 }
