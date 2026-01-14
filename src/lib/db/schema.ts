@@ -148,3 +148,64 @@ export const alerts = pgTable('alerts', {
 
 export type Alert = typeof alerts.$inferSelect
 export type NewAlert = typeof alerts.$inferInsert
+
+// ============================================================================
+// USER SETTINGS (notification preferences - references Better Auth user.id)
+// ============================================================================
+
+export const userSettings = pgTable('user_settings', {
+  userId: text('user_id').primaryKey(), // Better Auth user.id
+  emailAlerts: boolean('email_alerts').default(true).notNull(),
+  pushNotifications: boolean('push_notifications').default(true).notNull(),
+  smsAlerts: boolean('sms_alerts').default(false).notNull(),
+  alertThreshold: varchar('alert_threshold', { length: 20 }).default('high').notNull(), // 'all' | 'high' | 'critical'
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+export type UserSettings = typeof userSettings.$inferSelect
+export type NewUserSettings = typeof userSettings.$inferInsert
+
+// ============================================================================
+// FAMILY INVITES (pending invitations)
+// ============================================================================
+
+export const familyInvites = pgTable('family_invites', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  familyId: uuid('family_id')
+    .notNull()
+    .references(() => families.id, { onDelete: 'cascade' }),
+  invitedBy: text('invited_by').notNull(), // Better Auth user.id
+  email: varchar('email', { length: 255 }),
+  phone: varchar('phone', { length: 20 }),
+  name: varchar('name', { length: 255 }).notNull(),
+  token: varchar('token', { length: 255 }).notNull().unique(),
+  status: varchar('status', { length: 20 }).default('pending').notNull(), // 'pending' | 'accepted' | 'expired'
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('family_invites_token_idx').on(table.token),
+  index('family_invites_family_id_idx').on(table.familyId),
+])
+
+export type FamilyInvite = typeof familyInvites.$inferSelect
+export type NewFamilyInvite = typeof familyInvites.$inferInsert
+
+// ============================================================================
+// GUARDIAN FAMILIES (links Better Auth users to families)
+// ============================================================================
+
+export const guardianFamilies = pgTable('guardian_families', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  authUserId: text('auth_user_id').notNull().unique(), // Better Auth user.id
+  familyId: uuid('family_id')
+    .notNull()
+    .references(() => families.id, { onDelete: 'cascade' }),
+  role: varchar('role', { length: 20 }).default('guardian').notNull(), // 'guardian' | 'admin'
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('guardian_families_auth_user_idx').on(table.authUserId),
+  index('guardian_families_family_idx').on(table.familyId),
+])
+
+export type GuardianFamily = typeof guardianFamilies.$inferSelect
+export type NewGuardianFamily = typeof guardianFamilies.$inferInsert

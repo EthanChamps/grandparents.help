@@ -55,45 +55,40 @@ export default function AlertsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="w-8 h-8 border-4 rounded-full animate-spin"
-             style={{ borderColor: 'var(--amber-glow)', borderTopColor: 'transparent' }} />
+      <div className="flex items-center justify-center py-20">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-3 rounded-full animate-spin"
+               style={{ borderColor: 'var(--amber-glow)', borderTopColor: 'transparent' }} />
+          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Loading alerts...</span>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 dash-stagger">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
             Security Alerts
           </h1>
-          <p style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             Review potential scam detections and suspicious activity
           </p>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex rounded-lg overflow-hidden" style={{ background: 'var(--bg-card)' }}>
+        <div className="dash-tabs">
           <button
             onClick={() => setFilter('unread')}
-            className="px-4 py-2 text-sm font-medium transition-colors"
-            style={{
-              background: filter === 'unread' ? 'var(--amber-glow)' : 'transparent',
-              color: filter === 'unread' ? 'var(--bg-deep)' : 'var(--text-secondary)',
-            }}
+            className={`dash-tab ${filter === 'unread' ? 'dash-tab-active' : ''}`}
           >
             Unread
           </button>
           <button
             onClick={() => setFilter('all')}
-            className="px-4 py-2 text-sm font-medium transition-colors"
-            style={{
-              background: filter === 'all' ? 'var(--amber-glow)' : 'transparent',
-              color: filter === 'all' ? 'var(--bg-deep)' : 'var(--text-secondary)',
-            }}
+            className={`dash-tab ${filter === 'all' ? 'dash-tab-active' : ''}`}
           >
             All
           </button>
@@ -102,19 +97,23 @@ export default function AlertsPage() {
 
       {/* Alerts List */}
       {filteredAlerts.length === 0 ? (
-        <div className="rounded-xl p-12 text-center" style={{ background: 'var(--bg-card)' }}>
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
-               style={{ background: 'var(--success)', opacity: 0.2 }}>
-            <CheckIcon className="w-8 h-8" style={{ color: 'var(--success)' }} />
+        <div className="dash-card">
+          <div className="dash-empty">
+            <div className="dash-empty-icon" style={{
+              background: 'linear-gradient(135deg, rgba(74, 222, 128, 0.15) 0%, rgba(74, 222, 128, 0.05) 100%)',
+              border: '1px solid rgba(74, 222, 128, 0.2)',
+            }}>
+              <CheckIcon className="w-7 h-7" style={{ color: 'var(--success)' }} />
+            </div>
+            <p className="dash-empty-title">
+              {filter === 'unread' ? 'All clear!' : 'No alerts yet'}
+            </p>
+            <p className="dash-empty-desc">
+              {filter === 'unread'
+                ? 'All alerts have been reviewed. Great job keeping your family safe.'
+                : 'Alerts will appear here when potential scams are detected.'}
+            </p>
           </div>
-          <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
-            {filter === 'unread' ? 'No unread alerts' : 'No alerts yet'}
-          </p>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            {filter === 'unread'
-              ? 'All alerts have been reviewed'
-              : 'Alerts will appear when potential scams are detected'}
-          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -141,55 +140,60 @@ function AlertCard({
   const date = new Date(alert.createdAt)
   const severity = alert.scamProbability >= 0.9 ? 'high' : alert.scamProbability >= 0.7 ? 'medium' : 'low'
 
-  const severityColors = {
-    high: { bg: 'var(--error)', text: 'white' },
-    medium: { bg: 'var(--amber-glow)', text: 'var(--bg-deep)' },
-    low: { bg: 'var(--text-muted)', text: 'white' },
+  const severityConfig = {
+    high: {
+      bg: 'var(--error)',
+      badge: 'dash-badge-error',
+      border: 'rgba(248, 113, 113, 0.3)',
+    },
+    medium: {
+      bg: 'var(--amber-glow)',
+      badge: 'dash-badge-warning',
+      border: 'rgba(245, 158, 11, 0.3)',
+    },
+    low: {
+      bg: 'var(--bg-elevated)',
+      badge: 'dash-badge-muted',
+      border: 'rgba(255, 255, 255, 0.1)',
+    },
   }
 
+  const config = severityConfig[severity]
+
   return (
-    <div
-      className="rounded-xl overflow-hidden"
-      style={{
-        background: 'var(--bg-card)',
-        border: !alert.acknowledged ? '2px solid var(--error)' : 'none',
-      }}
-    >
-      <div className="p-4">
-        <div className="flex items-start gap-4">
-          {/* Severity Badge */}
-          <div
-            className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: severityColors[severity].bg }}
-          >
-            <AlertIcon className="w-6 h-6" style={{ color: severityColors[severity].text }} />
+    <div className="dash-card dash-card-hover"
+         style={!alert.acknowledged ? { border: `1px solid ${config.border}` } : {}}>
+      <div className="p-5">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+          {/* Severity Icon */}
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+               style={{
+                 background: config.bg,
+                 color: severity === 'low' ? 'var(--text-secondary)' : 'white',
+               }}>
+            <AlertIcon className="w-6 h-6" />
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
                 {alert.seniorName}
               </span>
-              <span
-                className="text-xs px-2 py-0.5 rounded-full"
-                style={{ background: severityColors[severity].bg, color: severityColors[severity].text }}
-              >
-                {Math.round(alert.scamProbability * 100)}% probability
+              <span className={`dash-badge ${config.badge}`}>
+                {Math.round(alert.scamProbability * 100)}% risk
               </span>
               {!alert.acknowledged && (
-                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--error)', color: 'white' }}>
-                  New
-                </span>
+                <span className="dash-badge dash-badge-error">New</span>
               )}
             </div>
 
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               {alert.aiAnalysis}
             </p>
 
-            <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-              {date.toLocaleDateString()} at {date.toLocaleTimeString()}
+            <p className="text-xs mt-3" style={{ color: 'var(--text-muted)' }}>
+              {date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at {date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
 
@@ -197,8 +201,7 @@ function AlertCard({
           {!alert.acknowledged && (
             <button
               onClick={onAcknowledge}
-              className="px-4 py-2 rounded-lg text-sm font-medium shrink-0"
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+              className="dash-btn dash-btn-secondary flex-shrink-0"
             >
               Mark as Read
             </button>
@@ -207,14 +210,15 @@ function AlertCard({
 
         {/* Image Preview */}
         {alert.imageUrl && (
-          <div className="mt-4 p-3 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
-            <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>
-              Scanned Image:
+          <div className="mt-4 p-4 rounded-xl" style={{ background: 'var(--bg-elevated)' }}>
+            <p className="text-xs font-medium mb-3" style={{ color: 'var(--text-muted)' }}>
+              Scanned Image
             </p>
             <img
               src={alert.imageUrl}
               alt="Scanned content"
               className="max-h-48 rounded-lg"
+              style={{ border: '1px solid rgba(255, 255, 255, 0.06)' }}
             />
           </div>
         )}
@@ -223,18 +227,18 @@ function AlertCard({
   )
 }
 
-function AlertIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+function AlertIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
     </svg>
   )
 }
 
 function CheckIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg className={className} style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    <svg className={className} style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
     </svg>
   )
 }

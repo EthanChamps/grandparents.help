@@ -7,6 +7,9 @@ const protectedRoutes = ['/', '/dashboard', '/camera']
 // Routes that should redirect to app if already authenticated
 const authRoutes = ['/auth/senior', '/auth/family']
 
+// Routes only for guardians (not seniors)
+const guardianOnlyRoutes = ['/dashboard']
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -15,6 +18,9 @@ export async function middleware(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(route + '/')
   )
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route))
+  const isGuardianOnlyRoute = guardianOnlyRoutes.some(
+    (route) => pathname === route || pathname.startsWith(route + '/')
+  )
 
   // Skip if not a route we care about
   if (!isProtectedRoute && !isAuthRoute) {
@@ -22,7 +28,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Fetch session from auth API
-  const { data: session } = await betterFetch<{ user: { id: string } } | null>(
+  const { data: session } = await betterFetch<{ user: { id: string; role?: string } } | null>(
     '/api/auth/get-session',
     {
       baseURL: request.nextUrl.origin,
@@ -33,6 +39,7 @@ export async function middleware(request: NextRequest) {
   )
 
   const isAuthenticated = !!session?.user
+  const isSenior = session?.user?.role === 'senior'
 
   // Redirect unauthenticated users to login
   if (isProtectedRoute && !isAuthenticated) {
@@ -41,11 +48,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
+  // Redirect seniors away from guardian-only routes (dashboard)
+  if (isGuardianOnlyRoute && isAuthenticated && isSenior) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
   // Redirect authenticated users away from auth pages
   if (isAuthRoute && isAuthenticated) {
     // Family auth goes to dashboard, senior auth goes to home
     const isFamilyAuth = pathname.startsWith('/auth/family')
-    const redirectUrl = isFamilyAuth ? '/dashboard' : '/'
+    const redirectUrl = isFamilyAuth && !isSenior ? '/dashboard' : '/'
     return NextResponse.redirect(new URL(redirectUrl, request.url))
   }
 

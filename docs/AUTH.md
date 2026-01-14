@@ -22,12 +22,25 @@ Better Auth uses these tables in `public` schema:
 
 ## Auth Flows
 
-### Senior (Magic Link)
+### Senior (Magic Link - Direct)
 1. User enters email at `/auth/senior`
 2. `authClient.signIn.magicLink({ email })` called
 3. Better Auth creates verification token, calls `sendMagicLink`
 4. Resend sends email with link
 5. User clicks link → session created → redirected to `/`
+
+### Senior (Invite Flow)
+1. Guardian sends invite from `/dashboard/family`
+2. `POST /api/dashboard/family/invite` creates `familyInvites` record
+3. Email sent via Resend with invite link
+4. Senior clicks link → `/auth/senior?token=xxx`
+5. `GET /api/auth/accept-invite?token=xxx` validates, returns invite details
+6. Senior enters email → `POST /api/auth/accept-invite`:
+   - Creates Better Auth user with `role: 'senior'`
+   - Creates entry in `users` table
+   - Links to family via `familyMembers`
+   - Generates magic link for auto-signin
+7. Senior redirected to `/` with active session
 
 ### Family (Email/Password)
 1. User enters credentials at `/auth/family`

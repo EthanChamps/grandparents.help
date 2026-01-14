@@ -1,8 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from '@/lib/auth-client'
-import Link from 'next/link'
 
 interface NotificationSettings {
   emailAlerts: boolean
@@ -14,7 +13,9 @@ interface NotificationSettings {
 export default function SettingsPage() {
   const { data: session } = useSession()
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
 
   const [settings, setSettings] = useState<NotificationSettings>({
     emailAlerts: true,
@@ -23,16 +24,53 @@ export default function SettingsPage() {
     alertThreshold: 'high',
   })
 
+  // Load settings on mount
+  useEffect(() => {
+    fetchSettings()
+  }, [])
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/dashboard/settings')
+      if (res.ok) {
+        const data = await res.json()
+        setSettings({
+          emailAlerts: data.emailAlerts ?? true,
+          pushNotifications: data.pushNotifications ?? true,
+          smsAlerts: data.smsAlerts ?? false,
+          alertThreshold: data.alertThreshold ?? 'high',
+        })
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSave = async () => {
     setIsSaving(true)
     setSaved(false)
+    setError('')
 
-    // TODO: Save settings to database
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    try {
+      const res = await fetch('/api/dashboard/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      })
 
-    setIsSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+      if (!res.ok) {
+        throw new Error('Failed to save settings')
+      }
+
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err) {
+      setError('Failed to save settings. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const toggleSetting = (key: keyof NotificationSettings) => {
@@ -43,44 +81,42 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="max-w-2xl mx-auto space-y-6 dash-stagger">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
           Settings
         </h1>
-        <p style={{ color: 'var(--text-secondary)' }}>
-          Manage your notification preferences and account settings
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          Manage your notification preferences and account
         </p>
       </div>
 
       {/* Account Section */}
-      <div className="rounded-xl" style={{ background: 'var(--bg-card)' }}>
-        <div className="p-4 border-b" style={{ borderColor: 'var(--bg-elevated)' }}>
-          <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+      <div className="dash-card">
+        <div className="dash-section-header">
+          <h2 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
             Account
           </h2>
         </div>
-        <div className="p-4 space-y-4">
+        <div className="p-5 space-y-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium" style={{ color: 'var(--text-primary)' }}>Email</p>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>Email</p>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                 {session?.user?.email}
               </p>
             </div>
           </div>
+          <div className="dash-divider" />
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium" style={{ color: 'var(--text-primary)' }}>Name</p>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>Name</p>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                 {session?.user?.name || 'Not set'}
               </p>
             </div>
-            <button
-              className="text-sm px-3 py-1.5 rounded-lg"
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}
-            >
+            <button className="dash-btn dash-btn-ghost">
               Edit
             </button>
           </div>
@@ -88,25 +124,27 @@ export default function SettingsPage() {
       </div>
 
       {/* Notifications Section */}
-      <div className="rounded-xl" style={{ background: 'var(--bg-card)' }}>
-        <div className="p-4 border-b" style={{ borderColor: 'var(--bg-elevated)' }}>
-          <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+      <div className="dash-card">
+        <div className="dash-section-header">
+          <h2 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
             Notifications
           </h2>
         </div>
-        <div className="p-4 space-y-4">
+        <div className="p-5 space-y-5">
           <ToggleSetting
             label="Email Alerts"
             description="Receive alerts via email"
             enabled={settings.emailAlerts}
             onToggle={() => toggleSetting('emailAlerts')}
           />
+          <div className="dash-divider" />
           <ToggleSetting
             label="Push Notifications"
             description="Browser push notifications for urgent alerts"
             enabled={settings.pushNotifications}
             onToggle={() => toggleSetting('pushNotifications')}
           />
+          <div className="dash-divider" />
           <ToggleSetting
             label="SMS Alerts"
             description="Text message alerts for critical scam detections"
@@ -114,23 +152,21 @@ export default function SettingsPage() {
             onToggle={() => toggleSetting('smsAlerts')}
           />
 
-          <div className="pt-4 border-t" style={{ borderColor: 'var(--bg-elevated)' }}>
-            <p className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+          <div className="dash-divider" />
+
+          <div>
+            <p className="font-medium text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
               Alert Sensitivity
             </p>
-            <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
-              Choose which alerts to receive notifications for
+            <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
+              Choose which alerts trigger notifications
             </p>
-            <div className="flex gap-2">
+            <div className="dash-tabs" style={{ display: 'inline-flex' }}>
               {(['all', 'high', 'critical'] as const).map((threshold) => (
                 <button
                   key={threshold}
                   onClick={() => setSettings((prev) => ({ ...prev, alertThreshold: threshold }))}
-                  className="px-4 py-2 rounded-lg text-sm font-medium capitalize"
-                  style={{
-                    background: settings.alertThreshold === threshold ? 'var(--amber-glow)' : 'var(--bg-elevated)',
-                    color: settings.alertThreshold === threshold ? 'var(--bg-deep)' : 'var(--text-secondary)',
-                  }}
+                  className={`dash-tab ${settings.alertThreshold === threshold ? 'dash-tab-active' : ''}`}
                 >
                   {threshold === 'all' ? 'All Alerts' : threshold === 'high' ? 'High Risk' : 'Critical Only'}
                 </button>
@@ -141,47 +177,51 @@ export default function SettingsPage() {
       </div>
 
       {/* Subscription Section */}
-      <div className="rounded-xl" style={{ background: 'var(--bg-card)' }}>
-        <div className="p-4 border-b" style={{ borderColor: 'var(--bg-elevated)' }}>
-          <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+      <div className="dash-card">
+        <div className="dash-section-header">
+          <h2 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
             Subscription
           </h2>
         </div>
-        <div className="p-4">
+        <div className="p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium" style={{ color: 'var(--text-primary)' }}>Current Plan</p>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <div className="flex items-center gap-2">
+                <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>Current Plan</p>
+                <span className="dash-badge dash-badge-success">Active</span>
+              </div>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                 Free Trial
               </p>
             </div>
-            <Link
-              href="/dashboard/billing"
-              className="px-4 py-2 rounded-lg text-sm font-medium"
-              style={{ background: 'var(--amber-glow)', color: 'var(--bg-deep)' }}
-            >
+            <button className="dash-btn dash-btn-primary">
               Upgrade
-            </Link>
+            </button>
           </div>
-          <p className="text-xs mt-3" style={{ color: 'var(--text-muted)' }}>
-            Billing management coming soon (#11)
+          <p className="text-xs mt-4" style={{ color: 'var(--text-muted)' }}>
+            Billing management coming soon
           </p>
         </div>
       </div>
 
       {/* Save Button */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 pt-2">
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="px-6 py-3 rounded-lg font-medium"
-          style={{ background: 'var(--amber-glow)', color: 'var(--bg-deep)' }}
+          className="dash-btn dash-btn-primary"
+          style={{ padding: '0.75rem 1.5rem' }}
         >
           {isSaving ? 'Saving...' : 'Save Changes'}
         </button>
         {saved && (
-          <span className="text-sm" style={{ color: 'var(--success)' }}>
+          <span className="text-sm font-medium" style={{ color: 'var(--success)' }}>
             Settings saved!
+          </span>
+        )}
+        {error && (
+          <span className="text-sm font-medium" style={{ color: 'var(--error)' }}>
+            {error}
           </span>
         )}
       </div>
@@ -201,22 +241,20 @@ function ToggleSetting({
   onToggle: () => void
 }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between gap-4">
       <div>
-        <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{label}</p>
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{description}</p>
+        <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>{label}</p>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{description}</p>
       </div>
       <button
         onClick={onToggle}
-        className="relative w-12 h-7 rounded-full transition-colors"
-        style={{ background: enabled ? 'var(--amber-glow)' : 'var(--bg-elevated)' }}
+        className={`dash-toggle ${enabled ? 'dash-toggle-on' : 'dash-toggle-off'}`}
+        role="switch"
+        aria-checked={enabled}
       >
         <div
-          className="absolute top-1 w-5 h-5 rounded-full transition-transform"
-          style={{
-            background: 'white',
-            left: enabled ? '26px' : '4px',
-          }}
+          className="dash-toggle-knob"
+          style={{ left: enabled ? '22px' : '2px' }}
         />
       </button>
     </div>
