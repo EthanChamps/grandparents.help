@@ -2,23 +2,53 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 
-type TTSStatus = 'idle' | 'generating' | 'playing' | 'error'
+type TTSStatus = 'loading' | 'ready' | 'generating' | 'playing' | 'error' | 'idle'
+
+// Lazy-loaded Kokoro instance
+let kokoroInstance: unknown = null
+let kokoroLoading: Promise<unknown> | null = null
+
+async function loadKokoro() {
+  if (kokoroInstance) return kokoroInstance
+  if (kokoroLoading) return kokoroLoading
+
+  kokoroLoading = (async () => {
+    try {
+      // Dynamic import - only loads when called
+      const { KokoroTTS } = await import('kokoro-js')
+
+      kokoroInstance = await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', {
+        dtype: 'q4',    // Smallest/fastest (~6MB)
+        device: 'wasm', // Browser WASM
+      })
+
+      return kokoroInstance
+    } catch (error) {
+      console.error('Failed to load Kokoro:', error)
+      kokoroLoading = null
+      throw error
+    }
+  })()
+
+  return kokoroLoading
+}
 
 interface UseTTSReturn {
-  speak: (text: string) => Promise<void>
+  speak: (text: string) => void
   stop: () => void
   status: TTSStatus
   isSpeaking: boolean
+  isReady: boolean
   error: string | null
 }
 
 export function useTTS(): UseTTSReturn {
-  const [status, setStatus] = useState<TTSStatus>('idle')
+  // Start as 'ready' - we'll load Kokoro on first speak() call
+  const [status, setStatus] = useState<TTSStatus>('ready')
   const [error, setError] = useState<string | null>(null)
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioUrlRef = useRef<string | null>(null)
-  const abortControllerRef = useRef<AbortController | null>(null)
 
   // Cleanup on unmount
   useEffect(() => {
@@ -29,98 +59,100 @@ export function useTTS(): UseTTSReturn {
       if (audioRef.current) {
         audioRef.current.pause()
       }
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
-      }
     }
   }, [])
 
   const stop = useCallback(() => {
-    // Abort any in-flight request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
-      abortControllerRef.current = null
-    }
-
-    // Stop audio playback
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
     }
-
-    setStatus('idle')
+    // Also stop Web Speech API if running
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel()
+    }
+    setStatus('ready')
   }, [])
 
   const speak = useCallback(async (text: string) => {
     if (!text.trim()) return
 
-    // Stop any current playback
     stop()
     setError(null)
 
-    try {
-      setStatus('generating')
+    // Clean text for speech
+    const cleanText = text
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/#{1,6}\s/g, '')
+      .replace(/`/g, '')
+      .replace(/\n+/g, ' ')
+      // Remove emojis
+      .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{1F900}-\u{1F9FF}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '')
+      .trim()
 
-      // Create abort controller for this request
-      abortControllerRef.current = new AbortController()
-
-      // Call server API to generate speech
-      const response = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-        signal: abortControllerRef.current.signal,
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to generate speech')
+    // Load Kokoro on first use (if not already loaded)
+    if (!kokoroInstance && !kokoroLoading) {
+      setStatus('loading')
+      try {
+        await loadKokoro()
+      } catch (err) {
+        console.error('Kokoro load failed, using fallback:', err)
+        // Continue to fallback
       }
-
-      // Get audio blob
-      const audioBlob = await response.blob()
-
-      // Cleanup previous URL
-      if (audioUrlRef.current) {
-        URL.revokeObjectURL(audioUrlRef.current)
-      }
-
-      const url = URL.createObjectURL(audioBlob)
-      audioUrlRef.current = url
-
-      // Create or reuse audio element
-      if (!audioRef.current) {
-        audioRef.current = new Audio()
-      }
-
-      audioRef.current.src = url
-      audioRef.current.playbackRate = 0.95 // Slightly slower for seniors
-
-      // Handle playback events
-      audioRef.current.onplay = () => setStatus('playing')
-      audioRef.current.onended = () => setStatus('idle')
-      audioRef.current.onerror = () => {
-        setStatus('error')
-        setError('Failed to play audio')
-      }
-
-      setStatus('playing')
-      await audioRef.current.play()
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        // Request was cancelled, not an error
-        setStatus('idle')
-        return
-      }
-
-      console.error('TTS error:', err)
-      setStatus('error')
-      setError(err instanceof Error ? err.message : 'Failed to generate speech')
-
-      // Fallback to Web Speech API
-      fallbackToWebSpeech(text)
     }
+
+    // Try Kokoro first
+    if (kokoroInstance) {
+      try {
+        setStatus('generating')
+
+        const tts = kokoroInstance as {
+          generate: (text: string, opts?: { voice?: string }) => Promise<{ toBlob: () => Blob }>
+        }
+
+        const audio = await tts.generate(cleanText, {
+          voice: 'af_heart', // Warm female voice
+        })
+
+        const blob = audio.toBlob()
+
+        // Cleanup previous URL
+        if (audioUrlRef.current) {
+          URL.revokeObjectURL(audioUrlRef.current)
+        }
+
+        const url = URL.createObjectURL(blob)
+        audioUrlRef.current = url
+
+        if (!audioRef.current) {
+          audioRef.current = new Audio()
+        }
+
+        audioRef.current.src = url
+        audioRef.current.playbackRate = 0.95 // Slightly slower for seniors
+
+        audioRef.current.onplay = () => setStatus('playing')
+        audioRef.current.onended = () => setStatus('ready')
+        audioRef.current.onerror = () => {
+          setStatus('error')
+          setError('Failed to play audio')
+        }
+
+        setStatus('playing')
+        await audioRef.current.play()
+        return
+      } catch (err) {
+        console.error('Kokoro TTS error:', err)
+        // Fall through to Web Speech API
+      }
+    }
+
+    // Fallback to Web Speech API
+    fallbackToWebSpeech(cleanText, setStatus)
   }, [stop])
 
+  const isReady = status === 'ready' || status === 'idle'
   const isSpeaking = status === 'playing' || status === 'generating'
 
   return {
@@ -128,26 +160,28 @@ export function useTTS(): UseTTSReturn {
     stop,
     status,
     isSpeaking,
+    isReady,
     error,
   }
 }
 
-// Fallback to browser's built-in TTS if Gemini fails
-function fallbackToWebSpeech(text: string) {
-  if (!('speechSynthesis' in window)) return
+// Fallback to browser's built-in TTS
+function fallbackToWebSpeech(text: string, setStatus: (s: TTSStatus) => void) {
+  if (!('speechSynthesis' in window)) {
+    setStatus('error')
+    return
+  }
 
   speechSynthesis.cancel()
 
-  const plainText = text
-    .replace(/\*\*/g, '')
-    .replace(/\*/g, '')
-    .replace(/#{1,6}\s/g, '')
-    .replace(/`/g, '')
-
-  const utterance = new SpeechSynthesisUtterance(plainText)
+  const utterance = new SpeechSynthesisUtterance(text)
   utterance.rate = 0.85
   utterance.pitch = 1
   utterance.lang = 'en-GB'
+
+  utterance.onstart = () => setStatus('playing')
+  utterance.onend = () => setStatus('ready')
+  utterance.onerror = () => setStatus('error')
 
   speechSynthesis.speak(utterance)
 }

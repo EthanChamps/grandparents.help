@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useTTS } from '@/hooks/useTTS'
+import { ReadAnswerButton } from '@/components/ReadAnswerButton'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -12,12 +13,29 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [inputValue, setInputValue] = useState('')
-  const [autoRead, setAutoRead] = useState(true)
+  const [autoRead, setAutoRead] = useState(false) // Default OFF
   const scrollRef = useRef<HTMLDivElement>(null)
   const previousResponseRef = useRef<string | undefined>(undefined)
 
-  // Gemini TTS hook
-  const { speak, stop: stopSpeaking, isSpeaking, status: ttsStatus } = useTTS()
+  // Kokoro TTS hook
+  const { speak, stop: stopSpeaking, isSpeaking, isReady: ttsReady, status: ttsStatus } = useTTS()
+
+  // Load autoRead preference from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('guardrails-autoread')
+    if (saved !== null) {
+      setAutoRead(saved === 'true')
+    }
+  }, [])
+
+  // Save autoRead preference to localStorage
+  const toggleAutoRead = useCallback(() => {
+    setAutoRead(prev => {
+      const newValue = !prev
+      localStorage.setItem('guardrails-autoread', String(newValue))
+      return newValue
+    })
+  }, [])
 
   const latestResponse = messages.filter((m) => m.role === 'assistant').pop()?.content
 
@@ -108,7 +126,7 @@ export default function Home() {
 
         {/* Auto-read toggle */}
         <button
-          onClick={() => setAutoRead(!autoRead)}
+          onClick={toggleAutoRead}
           className="flex items-center gap-2 px-4 py-2 rounded-full transition-all"
           style={{
             background: autoRead ? 'var(--amber-glow)' : 'var(--bg-elevated)',
@@ -246,27 +264,12 @@ export default function Home() {
               {/* Read/Stop button */}
               {latestResponse && (
                 <div className="flex gap-3 mb-4">
-                  <button
-                    onClick={() => isSpeaking ? stopSpeaking() : speak(latestResponse)}
-                    disabled={ttsStatus === 'generating'}
-                    className="flex-1 btn py-4 text-lg disabled:opacity-70"
-                    style={{
-                      background: isSpeaking ? 'var(--error)' : 'var(--bg-elevated)',
-                      color: isSpeaking ? 'white' : 'var(--text-primary)',
-                    }}
-                  >
-                    {ttsStatus === 'generating' ? (
-                      <>
-                        <LoadingSpinner className="w-5 h-5" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <SpeakerIcon className="w-6 h-6" />
-                        {isSpeaking ? 'Stop Reading' : 'Read Answer'}
-                      </>
-                    )}
-                  </button>
+                  <ReadAnswerButton
+                    onRead={() => speak(latestResponse)}
+                    onStop={stopSpeaking}
+                    isSpeaking={isSpeaking}
+                    status={ttsStatus}
+                  />
                   <button
                     onClick={clearHistory}
                     className="btn btn-ghost px-6 py-4 text-lg"
