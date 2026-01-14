@@ -69,39 +69,78 @@ export default function BlogPage() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16" style={{ background: 'var(--bg-card)' }}>
-        <div className="max-w-4xl mx-auto text-center">
+      {/* Hero with gradient */}
+      <section
+        className="relative px-4 sm:px-6 lg:px-8 py-16 sm:py-20 overflow-hidden"
+        style={{ background: 'var(--bg-card)' }}
+      >
+        {/* Decorative gradient orbs */}
+        <div
+          className="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-20"
+          style={{ background: 'var(--amber-glow)' }}
+        />
+        <div
+          className="absolute bottom-0 right-1/4 w-64 h-64 rounded-full blur-3xl opacity-10"
+          style={{ background: '#a855f7' }}
+        />
+
+        <div className="relative max-w-4xl mx-auto text-center">
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+            style={{
+              background: 'rgba(245, 158, 11, 0.1)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+            }}
+          >
+            <BookIcon className="w-4 h-4" style={{ color: 'var(--amber-glow)' }} />
+            <span className="text-sm font-semibold" style={{ color: 'var(--amber-glow)' }}>
+              Knowledge Centre
+            </span>
+          </div>
+
           <h1
-            className="text-2xl sm:text-4xl lg:text-5xl font-extrabold mb-3 sm:mb-4"
+            className="text-3xl sm:text-5xl lg:text-6xl font-extrabold mb-4 sm:mb-6"
             style={{ color: 'var(--text-primary)' }}
           >
-            GuardRails Blog
+            Protect What{' '}
+            <span
+              style={{
+                background: 'linear-gradient(135deg, var(--amber-glow) 0%, #fcd34d 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              Matters Most
+            </span>
           </h1>
-          <p className="text-sm sm:text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-            Expert advice on protecting seniors from scams, technology tips for older adults, and guides
-            for family caregivers.
+          <p
+            className="text-base sm:text-xl max-w-2xl mx-auto leading-relaxed"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Expert guides on protecting seniors from scams, technology tips for older adults, and
+            resources for family caregivers.
           </p>
         </div>
       </section>
 
       {/* Tags */}
       {tags.length > 0 && (
-        <section className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <section className="px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <div className="max-w-6xl mx-auto">
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
               {tags.map((tag) => (
                 <Link
                   key={tag}
                   href={`/blog/tag/${tag}`}
-                  className="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all hover:scale-105"
+                  className="group px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-sm font-semibold transition-all hover:scale-105"
                   style={{
-                    background: 'var(--bg-elevated)',
-                    color: 'var(--text-secondary)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    background: 'rgba(245, 158, 11, 0.1)',
+                    color: 'var(--amber-glow)',
+                    border: '1px solid rgba(245, 158, 11, 0.25)',
                   }}
                 >
-                  #{tag}
+                  <span className="opacity-60 group-hover:opacity-100 transition-opacity">#</span>
+                  {tag}
                 </Link>
               ))}
             </div>
@@ -119,9 +158,9 @@ export default function BlogPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post) => (
-                <BlogCard key={post.slug} post={post} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+              {posts.map((post, index) => (
+                <BlogCard key={post.slug} post={post} featured={index === 0} />
               ))}
             </div>
           )}
@@ -129,24 +168,54 @@ export default function BlogPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16" style={{ background: 'var(--bg-card)' }}>
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-xl sm:text-2xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
+      <section
+        className="relative px-4 sm:px-6 lg:px-8 py-16 sm:py-20 overflow-hidden"
+        style={{ background: 'var(--bg-card)' }}
+      >
+        {/* Decorative elements */}
+        <div
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, var(--amber-glow) 1px, transparent 0)`,
+            backgroundSize: '32px 32px',
+          }}
+        />
+
+        <div className="relative max-w-3xl mx-auto text-center">
+          <div
+            className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, var(--amber-glow) 0%, #d97706 100%)',
+              boxShadow: '0 8px 32px rgba(245, 158, 11, 0.3)',
+            }}
+          >
+            <ShieldIcon className="w-8 h-8" style={{ color: 'var(--bg-deep)' }} />
+          </div>
+
+          <h2
+            className="text-2xl sm:text-3xl font-bold mb-4"
+            style={{ color: 'var(--text-primary)' }}
+          >
             Ready to protect your family?
           </h2>
-          <p className="text-sm sm:text-base mb-6" style={{ color: 'var(--text-secondary)' }}>
-            Join thousands of families using GuardRails to keep their loved ones safe.
+          <p
+            className="text-base sm:text-lg mb-8 max-w-xl mx-auto"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Join thousands of families using GuardRails to keep their loved ones safe from scams.
           </p>
           <Link
             href="/auth/family"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold transition-all"
+            className="inline-flex items-center gap-3 px-8 py-4 rounded-xl text-lg font-bold transition-all hover:scale-105"
             style={{
-              background: 'var(--amber-glow)',
+              background: 'linear-gradient(135deg, var(--amber-glow) 0%, #d97706 100%)',
               color: 'var(--bg-deep)',
-              minHeight: '56px',
+              boxShadow: '0 4px 20px rgba(245, 158, 11, 0.4)',
+              minHeight: '60px',
             }}
           >
             Start Free Trial
+            <ArrowRightIcon className="w-5 h-5" />
           </Link>
         </div>
       </section>
@@ -157,7 +226,7 @@ export default function BlogPage() {
         style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}
       >
         <div className="max-w-6xl mx-auto text-center">
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             © 2026 GuardRails. All rights reserved.
           </p>
         </div>
@@ -166,60 +235,88 @@ export default function BlogPage() {
   )
 }
 
-function BlogCard({ post }: { post: BlogPostMeta }) {
+function BlogCard({ post, featured }: { post: BlogPostMeta; featured?: boolean }) {
   return (
     <Link href={`/blog/${post.slug}`} className="group">
       <article
-        className="h-full p-5 sm:p-6 rounded-2xl transition-all group-hover:-translate-y-1"
+        className={`h-full rounded-2xl transition-all duration-300 group-hover:-translate-y-2 overflow-hidden ${
+          featured ? 'md:col-span-2' : ''
+        }`}
         style={{
           background: 'var(--bg-card)',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2)',
         }}
       >
-        {/* Image placeholder */}
-        {post.image && (
-          <div
-            className="w-full h-40 rounded-xl mb-4 bg-cover bg-center"
-            style={{ backgroundImage: `url(${post.image})` }}
-          />
-        )}
+        {/* Gradient header bar */}
+        <div
+          className="h-1"
+          style={{
+            background: 'linear-gradient(90deg, var(--amber-glow) 0%, #d97706 50%, transparent 100%)',
+          }}
+        />
 
-        {/* Tags */}
-        {post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {post.tags.slice(0, 2).map((tag) => (
-              <span
-                key={tag}
-                className="px-2 py-0.5 rounded text-xs font-medium"
-                style={{ background: 'var(--bg-elevated)', color: 'var(--amber-glow)' }}
-              >
-                {tag}
+        <div className="p-6 sm:p-8">
+          {/* Tags */}
+          {post.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {post.tags.slice(0, 3).map((tag) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide"
+                  style={{
+                    background: 'rgba(245, 158, 11, 0.15)',
+                    color: 'var(--amber-glow)',
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Title */}
+          <h2
+            className={`font-bold mb-3 leading-tight ${
+              featured ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'
+            }`}
+            style={{ color: 'var(--text-primary)' }}
+          >
+            <span className="group-hover:underline decoration-2 underline-offset-4"
+              style={{ textDecorationColor: 'var(--amber-glow)' }}>
+              {post.title}
+            </span>
+          </h2>
+
+          {/* Description */}
+          <p
+            className={`mb-6 leading-relaxed ${featured ? 'text-base' : 'text-sm'}`}
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            {post.description}
+          </p>
+
+          {/* Meta */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--text-muted)' }}>
+              <span className="flex items-center gap-1.5">
+                <CalendarIcon className="w-4 h-4" />
+                {formatDate(post.date)}
               </span>
-            ))}
+              <span className="flex items-center gap-1.5">
+                <ClockIcon className="w-4 h-4" />
+                {post.readingTime}
+              </span>
+            </div>
+
+            <div
+              className="flex items-center gap-1 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ color: 'var(--amber-glow)' }}
+            >
+              Read more
+              <ArrowRightIcon className="w-4 h-4" />
+            </div>
           </div>
-        )}
-
-        {/* Title */}
-        <h2
-          className="text-lg font-bold mb-2 group-hover:underline"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          {post.title}
-        </h2>
-
-        {/* Description */}
-        <p
-          className="text-sm mb-4 line-clamp-2"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          {post.description}
-        </p>
-
-        {/* Meta */}
-        <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
-          <span>{formatDate(post.date)}</span>
-          <span>•</span>
-          <span>{post.readingTime}</span>
         </div>
       </article>
     </Link>
@@ -239,6 +336,38 @@ function ShieldIcon({ className, style }: { className?: string; style?: React.CS
   return (
     <svg className={className} style={style} fill="currentColor" viewBox="0 0 24 24">
       <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+    </svg>
+  )
+}
+
+function BookIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+    </svg>
+  )
+}
+
+function CalendarIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  )
+}
+
+function ClockIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  )
+}
+
+function ArrowRightIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
     </svg>
   )
 }
