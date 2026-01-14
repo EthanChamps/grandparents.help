@@ -40,3 +40,28 @@ The app has two completely separate interfaces sharing a backend:
 - Login screens are #1 abandonment point — minimize auth friction
 - No credit card entry for seniors — payment handled by family member
 - All AI responses must be slow, one step at a time, with large visual cues
+
+## Key Patterns
+
+### Authentication (Better Auth)
+- **Config**: `src/lib/auth.ts` (server), `src/lib/auth-client.ts` (client)
+- **Route protection**: `src/middleware.ts`
+- Uses `pg` Pool for Neon connection (not neon serverless driver)
+- Better Auth tables in `public` schema: `user`, `session`, `account`, `verification`
+- See `docs/AUTH.md` for full details
+
+### Database (Drizzle + Neon)
+- **Schema**: `src/lib/db/schema.ts`
+- **Client**: `src/lib/db/index.ts`
+- Two sets of tables: Better Auth tables + our custom tables (users, families, alerts, etc.)
+
+### CSS Variables (Theming)
+- `--bg-deep`, `--bg-card`, `--bg-elevated` - backgrounds
+- `--amber-glow`, `--amber-soft` - accent colors
+- `--text-primary`, `--text-secondary`, `--text-muted` - text
+- `--success`, `--error` - status colors
+
+### Component Patterns
+- Large touch targets (60px+ buttons)
+- `.card`, `.btn`, `.btn-primary`, `.input-large` utility classes
+- Icons are inline SVG components
