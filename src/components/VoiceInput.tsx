@@ -7,7 +7,6 @@ interface VoiceInputProps {
   disabled?: boolean
 }
 
-// Type declarations for Web Speech API
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList
 }
@@ -35,14 +34,12 @@ declare global {
   }
 }
 
-// Check support on client side only
 function getIsSupported() {
   if (typeof window === 'undefined') return false
   return !!(window.SpeechRecognition || window.webkitSpeechRecognition)
 }
 
 function subscribe() {
-  // No-op: browser support doesn't change
   return () => {}
 }
 
@@ -60,7 +57,6 @@ export function VoiceInput({ onTranscript, disabled }: VoiceInputProps) {
 
   const isSupported = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
-  // Initialize recognition lazily
   const getRecognition = useCallback(() => {
     if (!recognitionRef.current && isSupported) {
       const SpeechRecognitionAPI =
@@ -96,7 +92,6 @@ export function VoiceInput({ onTranscript, disabled }: VoiceInputProps) {
     recognition.start()
     setIsListening(true)
 
-    // Haptic feedback if available
     if (navigator.vibrate) {
       navigator.vibrate(50)
     }
@@ -114,12 +109,11 @@ export function VoiceInput({ onTranscript, disabled }: VoiceInputProps) {
     return (
       <button
         disabled
-        className="flex-1 h-24 text-xl font-bold rounded-2xl
+        className="flex-1 h-16 text-base font-bold rounded-2xl
                    bg-zinc-700 text-zinc-500 cursor-not-allowed
-                   flex flex-col items-center justify-center gap-2"
-        style={{ minHeight: '96px', minWidth: '140px' }}
+                   flex items-center justify-center gap-2"
       >
-        <MicIcon className="w-10 h-10" />
+        <MicIcon className="w-6 h-6" />
         <span>Not Available</span>
       </button>
     )
@@ -129,20 +123,19 @@ export function VoiceInput({ onTranscript, disabled }: VoiceInputProps) {
     <button
       onClick={isListening ? stopListening : startListening}
       disabled={disabled}
-      className={`flex-1 h-24 text-xl font-bold rounded-2xl
-                  flex flex-col items-center justify-center gap-2
+      className={`flex-1 h-16 text-base font-bold rounded-2xl
+                  flex items-center justify-center gap-2
                   transition-all duration-150
-                  focus:outline-none focus:ring-4 focus:ring-amber-400/50
+                  focus:outline-none focus:ring-2 focus:ring-amber-400/50
                   disabled:opacity-50 disabled:cursor-not-allowed
                   ${
                     isListening
                       ? 'bg-red-500 text-white animate-pulse'
                       : 'bg-amber-400 text-zinc-900 hover:bg-amber-300 active:bg-amber-500'
                   }`}
-      style={{ minHeight: '96px', minWidth: '140px' }}
       aria-label={isListening ? 'Stop listening' : 'Start voice input'}
     >
-      <MicIcon className="w-10 h-10" />
+      <MicIcon className="w-6 h-6" />
       <span>{isListening ? 'Listening...' : 'Speak'}</span>
     </button>
   )

@@ -10,17 +10,16 @@ export function CameraButton({ disabled }: CameraButtonProps) {
   return (
     <Link
       href="/camera"
-      className={`flex-1 h-24 text-xl font-bold rounded-2xl
+      className={`flex-1 h-16 text-base font-bold rounded-2xl
                   bg-amber-400 text-zinc-900
                   hover:bg-amber-300 active:bg-amber-500
-                  flex flex-col items-center justify-center gap-2
+                  flex items-center justify-center gap-2
                   transition-colors duration-150
-                  focus:outline-none focus:ring-4 focus:ring-amber-400/50
+                  focus:outline-none focus:ring-2 focus:ring-amber-400/50
                   ${disabled ? 'pointer-events-none opacity-50' : ''}`}
-      style={{ minHeight: '96px', minWidth: '140px' }}
       aria-label="Take a photo to ask about"
     >
-      <CameraIcon className="w-10 h-10" />
+      <CameraIcon className="w-6 h-6" />
       <span>Show Me</span>
     </Link>
   )

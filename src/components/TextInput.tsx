@@ -27,35 +27,34 @@ export function TextInput({ onSubmit, disabled }: TextInputProps) {
   }
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full flex gap-3">
       <textarea
         ref={textareaRef}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
         disabled={disabled}
-        placeholder="Type your question here..."
+        placeholder="Type your question..."
         aria-label="Type your question"
-        className="w-full min-h-[120px] p-6 text-2xl leading-relaxed rounded-2xl
+        rows={2}
+        className="flex-1 p-4 text-xl leading-snug rounded-2xl
                    bg-zinc-800 text-white placeholder-zinc-400
-                   border-4 border-zinc-600 focus:border-amber-400
-                   focus:outline-none focus:ring-4 focus:ring-amber-400/30
+                   border-3 border-zinc-600 focus:border-amber-400
+                   focus:outline-none focus:ring-2 focus:ring-amber-400/30
                    disabled:opacity-50 disabled:cursor-not-allowed
                    resize-none"
-        style={{ fontSize: '24px' }}
       />
       <button
         onClick={handleSubmit}
         disabled={disabled || !value.trim()}
-        className="w-full h-20 text-2xl font-bold rounded-2xl
+        className="px-6 text-lg font-bold rounded-2xl shrink-0
                    bg-amber-400 text-zinc-900
                    hover:bg-amber-300 active:bg-amber-500
                    disabled:bg-zinc-600 disabled:text-zinc-400 disabled:cursor-not-allowed
                    transition-colors duration-150
-                   focus:outline-none focus:ring-4 focus:ring-amber-400/50"
-        style={{ minHeight: '80px' }}
+                   focus:outline-none focus:ring-2 focus:ring-amber-400/50"
       >
-        {disabled ? 'Thinking...' : 'Ask Question'}
+        {disabled ? '...' : 'Ask'}
       </button>
     </div>
   )

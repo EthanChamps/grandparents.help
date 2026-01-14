@@ -19,7 +19,6 @@ export default function Home() {
     async (question: string) => {
       setIsLoading(true)
 
-      // Add user message to history
       const userMessage: Message = { role: 'user', content: question }
       const updatedHistory = [...messages, userMessage]
       setMessages(updatedHistory)
@@ -62,49 +61,47 @@ export default function Home() {
   const latestResponse = messages.filter((m) => m.role === 'assistant').pop()
 
   return (
-    <div className="min-h-dvh flex flex-col safe-area-inset">
-      {/* Header */}
-      <header className="p-6 text-center border-b border-zinc-800 shrink-0">
-        <h1 className="text-3xl font-bold text-amber-400">GuardRails</h1>
-        <p className="text-xl text-zinc-400 mt-2">Tech Help for Seniors</p>
+    <div className="h-dvh flex flex-col overflow-hidden safe-area-inset">
+      {/* Header - fixed height */}
+      <header className="px-4 py-3 text-center border-b border-zinc-800 shrink-0">
+        <h1 className="text-2xl font-bold text-amber-400">GuardRails</h1>
+        <p className="text-base text-zinc-400">Tech Help for Seniors</p>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1 flex flex-col p-6 max-w-2xl mx-auto w-full overflow-hidden">
-        {/* Question prompt - only show when no messages */}
-        {messages.length === 0 && (
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-semibold text-white">
-              What do you need help with?
-            </h2>
+      {/* Main content - responsive two-column on large screens */}
+      <main className="flex-1 min-h-0 p-4 w-full max-w-6xl mx-auto">
+        <div className="h-full flex flex-col lg:flex-row lg:gap-6">
+          {/* Left column: Chat history (or prompt when empty) */}
+          <div className="flex-1 min-h-0 mb-4 lg:mb-0 lg:order-1">
+            {messages.length === 0 && !isLoading ? (
+              <div className="h-full flex items-center justify-center">
+                <h2 className="text-xl font-semibold text-white text-center">
+                  What do you need help with?
+                </h2>
+              </div>
+            ) : (
+              <ChatHistory
+                messages={messages}
+                isLoading={isLoading}
+                latestResponse={latestResponse?.content}
+                onClear={clearHistory}
+              />
+            )}
           </div>
-        )}
 
-        {/* Chat history - above input, takes available space */}
-        <div className="flex-1 overflow-hidden mb-6">
-          <ChatHistory
-            messages={messages}
-            isLoading={isLoading}
-            latestResponse={latestResponse?.content}
-            onClear={clearHistory}
-          />
-        </div>
-
-        {/* Input area - fixed at bottom of main */}
-        <div className="space-y-4 shrink-0">
-          {/* Text input */}
-          <TextInput onSubmit={askQuestion} disabled={isLoading} />
-
-          {/* Voice and Camera buttons */}
-          <div className="flex gap-4">
-            <VoiceInput onTranscript={askQuestion} disabled={isLoading} />
-            <CameraButton disabled={isLoading} />
+          {/* Right column: Input controls */}
+          <div className="shrink-0 lg:w-80 lg:order-2 lg:flex lg:flex-col lg:justify-center space-y-3">
+            <TextInput onSubmit={askQuestion} disabled={isLoading} />
+            <div className="flex gap-3">
+              <VoiceInput onTranscript={askQuestion} disabled={isLoading} />
+              <CameraButton disabled={isLoading} />
+            </div>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="p-4 text-center text-zinc-500 text-lg border-t border-zinc-800 shrink-0">
+      {/* Footer - fixed height */}
+      <footer className="px-4 py-2 text-center text-zinc-500 text-sm border-t border-zinc-800 shrink-0">
         <p>
           Need urgent help?{' '}
           <a href="tel:" className="text-amber-400 underline">
