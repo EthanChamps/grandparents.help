@@ -1,30 +1,34 @@
-import { neon, NeonQueryFunction } from '@neondatabase/serverless'
+// Re-export everything from new db module
+// This file kept for backwards compatibility
+export { db } from './db/index'
+export * from './db/schema'
 
-let sqlClient: NeonQueryFunction<false, false> | null = null
+import { db, events, messages } from './db/index'
 
-export function getSQL() {
-  if (!sqlClient) {
-    sqlClient = neon(process.env.DATABASE_URL!)
-  }
-  return sqlClient
-}
-
+/**
+ * Log an analytics event
+ * @deprecated Use db.insert(events).values() directly
+ */
 export async function logEvent(
   userId: string | null,
   eventType: string,
   metadata?: Record<string, unknown>
 ) {
   try {
-    const sql = getSQL()
-    await sql`
-      INSERT INTO public.events (user_id, event_type, metadata)
-      VALUES (${userId}, ${eventType}, ${JSON.stringify(metadata ?? {})})
-    `
+    await db.insert(events).values({
+      userId: userId ?? undefined,
+      eventType,
+      metadata: metadata ?? {},
+    })
   } catch (error) {
     console.error('Failed to log event:', error)
   }
 }
 
+/**
+ * Save a chat message
+ * @deprecated Use db.insert(messages).values() directly
+ */
 export async function saveMessage(
   userId: string,
   role: 'user' | 'assistant',
@@ -32,11 +36,12 @@ export async function saveMessage(
   imageUrl?: string
 ) {
   try {
-    const sql = getSQL()
-    await sql`
-      INSERT INTO public.messages (user_id, role, content, image_url)
-      VALUES (${userId}, ${role}, ${content}, ${imageUrl ?? null})
-    `
+    await db.insert(messages).values({
+      userId,
+      role,
+      content,
+      imageUrl: imageUrl ?? undefined,
+    })
   } catch (error) {
     console.error('Failed to save message:', error)
   }
