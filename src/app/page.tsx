@@ -4,36 +4,62 @@ import { useState, useCallback } from 'react'
 import { TextInput } from '@/components/TextInput'
 import { VoiceInput } from '@/components/VoiceInput'
 import { CameraButton } from '@/components/CameraButton'
-import { ResponseDisplay } from '@/components/ResponseDisplay'
+import { ChatHistory } from '@/components/ChatHistory'
+
+interface Message {
+  role: 'user' | 'assistant'
+  content: string
+}
 
 export default function Home() {
-  const [response, setResponse] = useState('')
+  const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  const askQuestion = useCallback(async (question: string) => {
-    setIsLoading(true)
-    setResponse('')
+  const askQuestion = useCallback(
+    async (question: string) => {
+      setIsLoading(true)
 
-    try {
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question }),
-      })
+      // Add user message to history
+      const userMessage: Message = { role: 'user', content: question }
+      const updatedHistory = [...messages, userMessage]
+      setMessages(updatedHistory)
 
-      const data = await res.json()
+      try {
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question,
+            history: messages, // Send previous history (not including current question)
+          }),
+        })
 
-      if (data.error) {
-        setResponse(data.error)
-      } else {
-        setResponse(data.response)
+        const data = await res.json()
+
+        const assistantMessage: Message = {
+          role: 'assistant',
+          content: data.error || data.response,
+        }
+
+        setMessages([...updatedHistory, assistantMessage])
+      } catch {
+        const errorMessage: Message = {
+          role: 'assistant',
+          content: 'Something went wrong. Please try again.',
+        }
+        setMessages([...updatedHistory, errorMessage])
+      } finally {
+        setIsLoading(false)
       }
-    } catch {
-      setResponse('Something went wrong. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
+    },
+    [messages]
+  )
+
+  const clearHistory = useCallback(() => {
+    setMessages([])
   }, [])
+
+  const latestResponse = messages.filter((m) => m.role === 'assistant').pop()
 
   return (
     <div className="min-h-dvh flex flex-col safe-area-inset">
@@ -44,7 +70,7 @@ export default function Home() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 p-6 space-y-8 max-w-2xl mx-auto w-full">
+      <main className="flex-1 p-6 space-y-6 max-w-2xl mx-auto w-full overflow-y-auto">
         {/* Question prompt */}
         <div className="text-center">
           <h2 className="text-2xl font-semibold text-white">
@@ -61,8 +87,13 @@ export default function Home() {
           <CameraButton disabled={isLoading} />
         </div>
 
-        {/* Response display */}
-        <ResponseDisplay response={response} isLoading={isLoading} />
+        {/* Chat history */}
+        <ChatHistory
+          messages={messages}
+          isLoading={isLoading}
+          latestResponse={latestResponse?.content}
+          onClear={clearHistory}
+        />
       </main>
 
       {/* Footer */}
