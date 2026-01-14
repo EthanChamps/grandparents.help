@@ -1,4 +1,4 @@
-import { getOpenAI } from '@/lib/openai'
+import { getGemini, GEMINI_MODEL } from '@/lib/gemini'
 import { TECH_HELPER_SYSTEM_PROMPT } from '@/lib/prompts'
 import { containsBlockedContent, BLOCKED_RESPONSE } from '@/lib/guardrails'
 import { logEvent } from '@/lib/db'
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     // Log the question event
     await logEvent(null, 'question_asked', {
       inputMethod: 'text',
-      questionLength: question.length
+      questionLength: question.length,
     })
 
     // Check for blocked content before sending to AI
@@ -26,17 +26,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ response: BLOCKED_RESPONSE })
     }
 
-    const completion = await getOpenAI().chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: TECH_HELPER_SYSTEM_PROMPT },
-        { role: 'user', content: question },
+    const ai = getGemini()
+    const result = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: TECH_HELPER_SYSTEM_PROMPT },
+            { text: `\n\nUser question: ${question}` },
+          ],
+        },
       ],
-      max_tokens: 1000,
-      temperature: 0.7,
     })
 
-    const response = completion.choices[0]?.message?.content ??
+    const response =
+      result.text ??
       "I'm sorry, I couldn't understand that. Could you try asking in a different way?"
 
     return NextResponse.json({ response })
