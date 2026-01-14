@@ -18,6 +18,7 @@ interface UseTTSReturn {
 // Singleton for Kokoro TTS instance
 let kokoroInstance: KokoroTTSType | null = null
 let kokoroLoadingPromise: Promise<KokoroTTSType> | null = null
+let preloadStarted = false
 
 async function loadKokoro(): Promise<KokoroTTSType> {
   if (kokoroInstance) return kokoroInstance
@@ -31,7 +32,7 @@ async function loadKokoro(): Promise<KokoroTTSType> {
       const tts = await KokoroTTS.from_pretrained(
         'onnx-community/Kokoro-82M-v1.0-ONNX',
         {
-          dtype: 'q8', // Quantized for smaller size and faster loading
+          dtype: 'q4', // Smaller quantization for faster loading (~25MB vs ~50MB)
           device: 'wasm', // WebAssembly for broad browser support
         }
       )
@@ -44,6 +45,20 @@ async function loadKokoro(): Promise<KokoroTTSType> {
   })()
 
   return kokoroLoadingPromise
+}
+
+// Preload model in background on app startup
+export function preloadTTS(): void {
+  if (preloadStarted || typeof window === 'undefined') return
+  preloadStarted = true
+
+  // Start loading after a short delay to not block initial render
+  setTimeout(() => {
+    loadKokoro().catch((err) => {
+      console.warn('TTS preload failed:', err)
+      preloadStarted = false // Allow retry
+    })
+  }, 1000)
 }
 
 export function useTTS(): UseTTSReturn {

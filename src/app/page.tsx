@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { useTTS } from '@/hooks/useTTS'
+import { useTTS, preloadTTS } from '@/hooks/useTTS'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -20,6 +20,11 @@ export default function Home() {
   const { speak, stop: stopSpeaking, isSpeaking, status: ttsStatus, loadProgress } = useTTS()
 
   const latestResponse = messages.filter((m) => m.role === 'assistant').pop()?.content
+
+  // Preload TTS model in background on mount
+  useEffect(() => {
+    preloadTTS()
+  }, [])
 
   // Auto-scroll to bottom
   useEffect(() => {
