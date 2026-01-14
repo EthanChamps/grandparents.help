@@ -54,6 +54,13 @@ The app has two completely separate interfaces sharing a backend:
 - **Schema**: `src/lib/db/schema.ts`
 - **Client**: `src/lib/db/index.ts`
 - Two sets of tables: Better Auth tables + our custom tables (users, families, alerts, etc.)
+- See `docs/DASHBOARD.md` for family/invite table schemas
+
+### Role-Based Access Control
+- User role stored in Better Auth `user.role` field ('senior' | 'family')
+- Middleware blocks seniors from `/dashboard/*` routes
+- API endpoints check `session.user.role` for authorization
+- Dashboard nav items filtered by role in layout component
 
 ### CSS Variables (Theming)
 - `--bg-deep`, `--bg-card`, `--bg-elevated` - backgrounds
@@ -62,6 +69,8 @@ The app has two completely separate interfaces sharing a backend:
 - `--success`, `--error` - status colors
 
 ### Component Patterns
-- Large touch targets (60px+ buttons)
-- `.card`, `.btn`, `.btn-primary`, `.input-large` utility classes
+- Large touch targets (60px+ buttons) for senior view
+- `.card`, `.btn`, `.btn-primary`, `.input-large` utility classes for senior view
+- `.dash-card`, `.dash-btn-*`, `.dash-input` for dashboard (compact)
+- `.dashboard-view` wrapper disables large touch targets
 - Icons are inline SVG components

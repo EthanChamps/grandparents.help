@@ -145,26 +145,22 @@ export default function Home() {
       <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {!hasConversation ? (
           /* Empty State - Hero Input */
-          <div className="flex-1 flex flex-col items-center justify-center p-6 stagger-children">
-            <div className="w-full max-w-xl text-center mb-8">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6"
-                   style={{ background: 'var(--bg-card)' }}>
-                <QuestionIcon className="w-10 h-10" style={{ color: 'var(--amber-glow)' }} />
-              </div>
-              <h2 className="text-3xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
+          <div className="flex-1 flex flex-col items-center justify-center overflow-y-auto px-4 py-4 stagger-children">
+            <div className="w-full max-w-xl text-center mb-4 shrink-0">
+              <h2 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
                 What do you need help with?
               </h2>
-              <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
-                Ask me anything about technology. I&apos;ll explain it simply.
+              <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
+                Ask me anything about technology.
               </p>
             </div>
 
             {/* Hero Input Card */}
-            <div className="w-full max-w-xl card p-8 glow-amber">
+            <div className="w-full max-w-xl card p-5 glow-amber shrink-0">
               {/* Input label */}
               <label
                 htmlFor="main-question-input"
-                className="block text-lg font-bold mb-3"
+                className="block text-base font-bold mb-2"
                 style={{ color: 'var(--amber-soft)' }}
               >
                 Type your question below:
@@ -176,30 +172,24 @@ export default function Home() {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="For example: How do I scan a QR code?"
-                rows={4}
-                className="w-full input-large resize-none mb-5"
-                style={{ minHeight: '140px' }}
+                rows={2}
+                className="w-full input-large resize-none mb-3"
                 aria-label="Type your question"
               />
 
               <button
                 onClick={() => askQuestion(inputValue)}
                 disabled={!inputValue.trim() || isLoading}
-                className="w-full btn btn-primary py-6 text-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full btn btn-primary py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <SendIcon className="w-7 h-7" />
+                <SendIcon className="w-5 h-5" />
                 {isLoading ? 'Thinking...' : 'Ask Question'}
               </button>
 
               {/* Alternative input methods */}
-              <div className="mt-6 pt-5" style={{ borderTop: '2px solid var(--bg-elevated)' }}>
-                <p className="text-center text-sm font-semibold mb-4" style={{ color: 'var(--text-muted)' }}>
-                  Or use these options:
-                </p>
-                <div className="flex gap-3">
-                  <VoiceButton onTranscript={askQuestion} disabled={isLoading} />
-                  <CameraButton disabled={isLoading} />
-                </div>
+              <div className="mt-4 pt-3 flex gap-3" style={{ borderTop: '2px solid var(--bg-elevated)' }}>
+                <VoiceButton onTranscript={askQuestion} disabled={isLoading} compact />
+                <CameraButton disabled={isLoading} compact />
               </div>
             </div>
           </div>
@@ -311,8 +301,8 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="px-6 py-3 text-center border-t" style={{ borderColor: 'var(--bg-elevated)' }}>
-        <p style={{ color: 'var(--text-muted)' }}>
+      <footer className="shrink-0 px-6 py-2 text-center border-t" style={{ borderColor: 'var(--bg-elevated)' }}>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
           Need urgent help?{' '}
           <a href="tel:" className="underline" style={{ color: 'var(--amber-glow)' }}>
             Call a family member

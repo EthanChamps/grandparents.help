@@ -8,6 +8,13 @@
       "when": 1768399806490,
       "tag": "0000_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768402684311,
+      "tag": "0001_secret_mephisto",
+      "breakpoints": true
     }
   ]
 }
