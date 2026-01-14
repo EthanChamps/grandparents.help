@@ -1,71 +1,99 @@
 # Current Sprint
 
 ## Active Issues
-- #10 - Design and Implement Database Schema - in progress
-- #9 - Implement Authentication System - queued
+- #9 - Implement Authentication System - in progress
 
 ## Goal
-Define complete database schema for users, families, sessions, messages, events, and alerts.
+Dual auth system: passwordless magic links for seniors, email/password for family members.
 
 ## Approach
 
-### Schema Design
+### Stack
+- **Neon Auth** (already provisioned) - managed Better Auth service
+- **Better Auth** - TypeScript auth library
+- Uses `neon_auth` schema (user, session, account, verification tables)
+
+### Architecture
 
 ```
-┌─────────────┐       ┌─────────────────┐       ┌─────────────┐
-│   users     │       │ family_members  │       │  families   │
-├─────────────┤       ├─────────────────┤       ├─────────────┤
-│ id (PK)     │──────<│ user_id (FK)    │>──────│ id (PK)     │
-│ type        │       │ family_id (FK)  │       │ name        │
-│ email       │       │ role            │       │ subscription│
-│ phone       │       │ created_at      │       │ created_at  │
-│ name        │       └─────────────────┘       └─────────────┘
-│ created_at  │
-└──────┬──────┘
-       │
-       │ 1:N
-       ▼
-┌─────────────┐       ┌─────────────┐       ┌─────────────┐
-│  sessions   │       │  messages   │       │   alerts    │
-├─────────────┤       ├─────────────┤       ├─────────────┤
-│ id (PK)     │       │ id (PK)     │       │ id (PK)     │
-│ user_id(FK) │       │ user_id(FK) │       │ user_id(FK) │
-│ token       │       │ role        │       │ family_id   │
-│ expires_at  │       │ content     │       │ type        │
-│ created_at  │       │ image_url   │       │ scam_prob   │
-└─────────────┘       │ created_at  │       │ image_url   │
-                      └─────────────┘       │ ai_analysis │
-                                            │ acknowledged│
-┌─────────────┐                             │ created_at  │
-│   events    │                             └─────────────┘
-├─────────────┤
-│ id (PK)     │
-│ user_id(FK) │
-│ event_type  │
-│ metadata    │
-│ created_at  │
-└─────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                        Auth Flow                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  SENIOR (/auth/senior)          FAMILY (/auth/family)       │
+│  ┌─────────────────────┐        ┌─────────────────────┐     │
+│  │ Enter email/phone   │        │ Email + Password    │     │
+│  │         ↓           │        │         ↓           │     │
+│  │ Magic link sent     │        │ Standard login      │     │
+│  │         ↓           │        │         ↓           │     │
+│  │ Click link → auth   │        │ Session created     │     │
+│  └─────────────────────┘        └─────────────────────┘     │
+│              ↓                            ↓                 │
+│              └──────────┬─────────────────┘                 │
+│                         ↓                                   │
+│              ┌─────────────────────┐                        │
+│              │ neon_auth.session   │                        │
+│              │ neon_auth.user      │                        │
+│              └─────────────────────┘                        │
+│                         ↓                                   │
+│              ┌─────────────────────┐                        │
+│              │ Middleware check    │                        │
+│              │ /dashboard, /camera │                        │
+│              └─────────────────────┘                        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Decisions
-1. **Single `users` table** with `type` field ('senior'|'family') - simpler than separate tables
-2. **`family_members` junction** - allows one senior to have multiple family guardians
-3. **Sessions stored in DB** - enables invalidation across devices
-4. **UUID primary keys** - better for distributed systems, no sequential exposure
-5. **Existing tables preserved** - `events` and `messages` already in use, just add FKs
+1. **Use Neon Auth's schema** - not our custom Drizzle schema for auth
+2. **Better Auth plugins**: `magicLink` for seniors, `emailAndPassword` for family
+3. **Session duration**: 30 days for seniors, 7 days for family
+4. **Email-first for MVP** - SMS magic links can be added later via Twilio
 
-### Migration Strategy
-1. Create new tables first (users, families, family_members, sessions, alerts)
-2. Alter existing tables to add foreign keys (events, messages)
-3. Add indexes for common query patterns
+### File Structure
+```
+src/
+├── lib/
+│   ├── auth.ts           # Better Auth server config
+│   └── auth-client.ts    # Better Auth React client
+├── app/
+│   ├── api/auth/[...all]/route.ts  # Auth API handler
+│   ├── auth/
+│   │   ├── senior/page.tsx         # Magic link login
+│   │   └── family/
+│   │       ├── page.tsx            # Email/password login
+│   │       └── register/page.tsx   # Family signup
+│   └── (protected)/                # Route group with auth
+│       ├── layout.tsx              # Auth check wrapper
+│       ├── page.tsx                # Main app (currently /)
+│       └── dashboard/page.tsx      # Family dashboard
+└── middleware.ts         # Route protection
+```
+
+### Session Strategy
+| User Type | Session Duration | Auth Method |
+|-----------|-----------------|-------------|
+| Senior    | 30 days         | Magic link (email) |
+| Family    | 7 days          | Email + password |
+
+## Implementation Steps
+1. Install `better-auth` + dependencies
+2. Create `src/lib/auth.ts` - server config with Neon
+3. Create `src/lib/auth-client.ts` - React hooks
+4. Create `/api/auth/[...all]/route.ts` - API handler
+5. Build `/auth/senior` page - big buttons, simple flow
+6. Build `/auth/family` page - standard login form
+7. Add `middleware.ts` - protect routes
+8. Move current page.tsx to protected route group
 
 ## Definition of Done
-- [x] SQL migration file created: `drizzle/0000_initial_schema.sql`
-- [x] TypeScript types in `src/lib/db/schema.ts` (auto-generated by Drizzle)
-- [x] db.ts updated with Drizzle client
-- [x] Schema pushed to Neon
-- [ ] Issue #10 closed with commit
+- [ ] `npm run build` succeeds
+- [ ] Senior can log in via magic link
+- [ ] Family can log in via email/password
+- [ ] Protected routes redirect to auth
+- [ ] Session persists across browser refresh
+- [ ] Logout works for both user types
+- [ ] Issue #9 closed with commit
 
 ## Risks
-- Existing `events`/`messages` data may not have valid user_ids (currently null)
-- Solution: Make user_id nullable with FK, backfill later
+- **Neon Auth schema vs our schema**: May need to link `neon_auth.user` to our `public.users` table later
+- **Magic link delivery**: Need email provider (Resend recommended)
