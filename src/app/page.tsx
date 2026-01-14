@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { useTTS, preloadTTS } from '@/hooks/useTTS'
+import { useTTS } from '@/hooks/useTTS'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -16,15 +16,10 @@ export default function Home() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const previousResponseRef = useRef<string | undefined>(undefined)
 
-  // Kokoro TTS hook
-  const { speak, stop: stopSpeaking, isSpeaking, status: ttsStatus, loadProgress } = useTTS()
+  // Gemini TTS hook
+  const { speak, stop: stopSpeaking, isSpeaking, status: ttsStatus } = useTTS()
 
   const latestResponse = messages.filter((m) => m.role === 'assistant').pop()?.content
-
-  // Preload TTS model in background on mount
-  useEffect(() => {
-    preloadTTS()
-  }, [])
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -253,22 +248,17 @@ export default function Home() {
                 <div className="flex gap-3 mb-4">
                   <button
                     onClick={() => isSpeaking ? stopSpeaking() : speak(latestResponse)}
-                    disabled={ttsStatus === 'loading-model' || ttsStatus === 'generating'}
+                    disabled={ttsStatus === 'generating'}
                     className="flex-1 btn py-4 text-lg disabled:opacity-70"
                     style={{
-                      background: isSpeaking ? 'var(--error)' : ttsStatus === 'loading-model' ? 'var(--amber-glow)' : 'var(--bg-elevated)',
-                      color: isSpeaking || ttsStatus === 'loading-model' ? 'white' : 'var(--text-primary)',
+                      background: isSpeaking ? 'var(--error)' : 'var(--bg-elevated)',
+                      color: isSpeaking ? 'white' : 'var(--text-primary)',
                     }}
                   >
-                    {ttsStatus === 'loading-model' ? (
+                    {ttsStatus === 'generating' ? (
                       <>
                         <LoadingSpinner className="w-5 h-5" />
-                        Loading Voice...
-                      </>
-                    ) : ttsStatus === 'generating' ? (
-                      <>
-                        <LoadingSpinner className="w-5 h-5" />
-                        Preparing...
+                        Generating...
                       </>
                     ) : (
                       <>
