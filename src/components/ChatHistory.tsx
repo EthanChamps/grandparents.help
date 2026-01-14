@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import ReactMarkdown from 'react-markdown'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -29,7 +30,14 @@ export function ChatHistory({
 
     speechSynthesis.cancel()
 
-    const utterance = new SpeechSynthesisUtterance(text)
+    // Strip markdown for speech
+    const plainText = text
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/#{1,6}\s/g, '')
+      .replace(/`/g, '')
+
+    const utterance = new SpeechSynthesisUtterance(plainText)
     utterance.rate = 0.85
     utterance.pitch = 1
     utterance.lang = 'en-GB'
@@ -73,36 +81,82 @@ export function ChatHistory({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="h-full flex flex-col">
       {/* Messages */}
       <div
         ref={scrollRef}
-        className="space-y-4 max-h-[400px] overflow-y-auto p-2"
+        className="flex-1 space-y-4 overflow-y-auto p-2"
       >
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            className={`p-6 rounded-2xl ${
+            className={`p-5 rounded-2xl ${
               msg.role === 'user'
                 ? 'bg-zinc-700 ml-8'
-                : 'bg-zinc-800 border-4 border-amber-400/50 mr-8'
+                : 'bg-zinc-800 border-4 border-amber-400/50 mr-4'
             }`}
           >
             <p className="text-sm text-zinc-400 mb-2">
               {msg.role === 'user' ? 'You asked:' : 'Answer:'}
             </p>
-            <p
-              className="text-xl leading-relaxed text-white whitespace-pre-wrap"
-              style={{ fontSize: '20px', lineHeight: '1.6' }}
-            >
-              {msg.content}
-            </p>
+            {msg.role === 'user' ? (
+              <p className="text-xl leading-relaxed text-white">
+                {msg.content}
+              </p>
+            ) : (
+              <div className="prose prose-invert prose-lg max-w-none">
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => (
+                      <p className="text-xl leading-relaxed text-white mb-4 last:mb-0">
+                        {children}
+                      </p>
+                    ),
+                    strong: ({ children }) => (
+                      <strong className="font-bold text-amber-300">{children}</strong>
+                    ),
+                    em: ({ children }) => (
+                      <em className="italic text-zinc-300">{children}</em>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="list-decimal list-outside ml-6 space-y-3 text-xl text-white">
+                        {children}
+                      </ol>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="list-disc list-outside ml-6 space-y-2 text-xl text-white">
+                        {children}
+                      </ul>
+                    ),
+                    li: ({ children }) => (
+                      <li className="text-xl leading-relaxed">{children}</li>
+                    ),
+                    code: ({ children }) => (
+                      <code className="bg-zinc-700 px-2 py-1 rounded text-amber-300">
+                        {children}
+                      </code>
+                    ),
+                    h1: ({ children }) => (
+                      <h1 className="text-2xl font-bold text-amber-400 mb-3">{children}</h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2 className="text-xl font-bold text-amber-400 mb-2">{children}</h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3 className="text-lg font-bold text-amber-400 mb-2">{children}</h3>
+                    ),
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              </div>
+            )}
           </div>
         ))}
 
         {/* Loading indicator */}
         {isLoading && (
-          <div className="p-6 rounded-2xl bg-zinc-800 border-4 border-zinc-600 mr-8">
+          <div className="p-5 rounded-2xl bg-zinc-800 border-4 border-zinc-600 mr-4">
             <div className="flex items-center gap-4">
               <div className="animate-spin w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full" />
               <p className="text-xl text-zinc-300">Thinking...</p>
@@ -113,11 +167,11 @@ export function ChatHistory({
 
       {/* Controls */}
       {messages.length > 0 && (
-        <div className="flex gap-4">
+        <div className="flex gap-4 pt-4 shrink-0">
           {latestResponse && (
             <button
               onClick={() => (isSpeaking ? stopSpeaking() : speak(latestResponse))}
-              className={`flex-1 h-16 text-xl font-bold rounded-2xl
+              className={`flex-1 h-14 text-lg font-bold rounded-2xl
                           flex items-center justify-center gap-3
                           transition-colors duration-150
                           focus:outline-none focus:ring-4 focus:ring-amber-400/50
@@ -127,13 +181,13 @@ export function ChatHistory({
                               : 'bg-zinc-700 text-white hover:bg-zinc-600'
                           }`}
             >
-              <SpeakerIcon className="w-8 h-8" />
+              <SpeakerIcon className="w-6 h-6" />
               {isSpeaking ? 'Stop' : 'Read Again'}
             </button>
           )}
           <button
             onClick={onClear}
-            className="h-16 px-6 text-xl font-bold rounded-2xl
+            className="h-14 px-6 text-lg font-bold rounded-2xl
                        bg-zinc-700 text-zinc-300 hover:bg-zinc-600
                        transition-colors duration-150
                        focus:outline-none focus:ring-4 focus:ring-amber-400/50"
