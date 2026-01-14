@@ -9,6 +9,8 @@ import {
   jsonb,
   primaryKey,
   index,
+  integer,
+  date,
 } from 'drizzle-orm/pg-core'
 
 // ============================================================================
@@ -209,3 +211,17 @@ export const guardianFamilies = pgTable('guardian_families', {
 
 export type GuardianFamily = typeof guardianFamilies.$inferSelect
 export type NewGuardianFamily = typeof guardianFamilies.$inferInsert
+
+// ============================================================================
+// USAGE QUOTAS (free plan limits)
+// ============================================================================
+
+export const usageQuotas = pgTable('usage_quotas', {
+  authUserId: text('auth_user_id').primaryKey(), // Better Auth user.id
+  questionCount: integer('question_count').default(0).notNull(),
+  lastQuestionDate: date('last_question_date', { mode: 'string' }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+export type UsageQuota = typeof usageQuotas.$inferSelect
+export type NewUsageQuota = typeof usageQuotas.$inferInsert

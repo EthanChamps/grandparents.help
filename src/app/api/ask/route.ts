@@ -3,6 +3,9 @@ import { TECH_HELPER_SYSTEM_PROMPT } from '@/lib/prompts'
 import { containsBlockedContent, BLOCKED_RESPONSE } from '@/lib/guardrails'
 import { logEvent } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
+import { headers } from 'next/headers'
+import { checkQuota, incrementQuota } from '@/lib/quota'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -11,6 +14,18 @@ interface Message {
 
 export async function POST(request: NextRequest) {
   try {
+    // Get authenticated user
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    })
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Please sign in to ask questions' },
+        { status: 401 }
+      )
+    }
+
     const { question, history = [] } = (await request.json()) as {
       question: string
       history?: Message[]
@@ -23,11 +38,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check quota before processing
+    const quotaStatus = await checkQuota(session.user.id)
+    if (!quotaStatus.allowed) {
+      return NextResponse.json({
+        error: 'quota_exceeded',
+        message: "You've used your 15 free questions today. Upgrade for unlimited access.",
+        remaining: 0,
+        limit: quotaStatus.limit,
+      }, { status: 429 })
+    }
+
     // Log the question event
     await logEvent(null, 'question_asked', {
       inputMethod: 'text',
       questionLength: question.length,
       historyLength: history.length,
+      userId: session.user.id,
     })
 
     // Check for blocked content before sending to AI
@@ -68,7 +95,14 @@ export async function POST(request: NextRequest) {
       result.text ??
       "I'm sorry, I couldn't understand that. Could you try asking in a different way?"
 
-    return NextResponse.json({ response })
+    // Increment quota after successful response
+    const updatedQuota = await incrementQuota(session.user.id)
+
+    return NextResponse.json({
+      response,
+      remaining: updatedQuota.remaining,
+      limit: updatedQuota.limit,
+    })
   } catch (error) {
     console.error('Error in /api/ask:', error)
     return NextResponse.json(

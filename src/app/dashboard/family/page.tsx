@@ -23,18 +23,20 @@ export default function FamilyPage() {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [removingId, setRemovingId] = useState<string | null>(null)
 
+  const userRole = (session?.user as { role?: string } | undefined)?.role
+
   // Redirect seniors away - they cannot manage family
   useEffect(() => {
-    if (!isPending && session?.user?.role === 'senior') {
+    if (!isPending && userRole === 'senior') {
       router.replace('/dashboard')
     }
-  }, [session, isPending, router])
+  }, [userRole, isPending, router])
 
   useEffect(() => {
-    if (!isPending && session?.user?.role !== 'senior') {
+    if (!isPending && userRole !== 'senior') {
       fetchFamilyMembers()
     }
-  }, [isPending, session])
+  }, [isPending, userRole])
 
   const fetchFamilyMembers = async () => {
     try {
@@ -83,7 +85,7 @@ export default function FamilyPage() {
   }
 
   // Show loading while checking session or if senior (redirecting)
-  if (isPending || isLoading || session?.user?.role === 'senior') {
+  if (isPending || isLoading || userRole === 'senior') {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-4">

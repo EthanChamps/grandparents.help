@@ -9,11 +9,19 @@ interface Message {
   content: string
 }
 
+interface Quota {
+  remaining: number
+  limit: number
+  used: number
+}
+
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [autoRead, setAutoRead] = useState(false) // Default OFF
+  const [quota, setQuota] = useState<Quota | null>(null)
+  const [quotaExceeded, setQuotaExceeded] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const previousResponseRef = useRef<string | undefined>(undefined)
 
@@ -26,6 +34,21 @@ export default function Home() {
     if (saved !== null) {
       setAutoRead(saved === 'true')
     }
+  }, [])
+
+  // Fetch quota on mount
+  useEffect(() => {
+    fetch('/api/quota')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.remaining !== undefined) {
+          setQuota(data)
+          setQuotaExceeded(data.remaining === 0)
+        }
+      })
+      .catch(() => {
+        // Silently fail - user may not be logged in
+      })
   }, [])
 
   // Save autoRead preference to localStorage
@@ -77,6 +100,28 @@ export default function Home() {
 
         const data = await res.json()
 
+        // Handle quota exceeded
+        if (data.error === 'quota_exceeded') {
+          setQuotaExceeded(true)
+          setQuota((prev) => prev ? { ...prev, remaining: 0 } : null)
+          const errorMessage: Message = {
+            role: 'assistant',
+            content: data.message || "You've used all your free questions for today. Please try again tomorrow or upgrade for unlimited access.",
+          }
+          setMessages([...updatedHistory, errorMessage])
+          return
+        }
+
+        // Update quota from response
+        if (data.remaining !== undefined) {
+          setQuota((prev) => prev ? {
+            ...prev,
+            remaining: data.remaining,
+            used: prev.limit - data.remaining,
+          } : { remaining: data.remaining, limit: data.limit, used: data.limit - data.remaining })
+          setQuotaExceeded(data.remaining === 0)
+        }
+
         const assistantMessage: Message = {
           role: 'assistant',
           content: data.error || data.response,
@@ -124,21 +169,36 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Auto-read toggle */}
-        <button
-          onClick={toggleAutoRead}
-          className="flex items-center gap-2 px-4 py-2 rounded-full transition-all"
-          style={{
-            background: autoRead ? 'var(--amber-glow)' : 'var(--bg-elevated)',
-            color: autoRead ? 'var(--bg-deep)' : 'var(--text-secondary)',
-          }}
-          aria-label={autoRead ? 'Auto-read is on' : 'Auto-read is off'}
-        >
-          <SpeakerIcon className="w-5 h-5" />
-          <span className="text-sm font-semibold hidden sm:inline">
-            {autoRead ? 'Reading On' : 'Reading Off'}
-          </span>
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Quota display */}
+          {quota && (
+            <div
+              className="px-3 py-1.5 rounded-full text-sm font-semibold"
+              style={{
+                background: quota.remaining <= 3 ? 'var(--error)' : 'var(--bg-elevated)',
+                color: quota.remaining <= 3 ? 'white' : 'var(--text-secondary)',
+              }}
+            >
+              {quota.remaining}/{quota.limit} today
+            </div>
+          )}
+
+          {/* Auto-read toggle */}
+          <button
+            onClick={toggleAutoRead}
+            className="flex items-center gap-2 px-4 py-2 rounded-full transition-all"
+            style={{
+              background: autoRead ? 'var(--amber-glow)' : 'var(--bg-elevated)',
+              color: autoRead ? 'var(--bg-deep)' : 'var(--text-secondary)',
+            }}
+            aria-label={autoRead ? 'Auto-read is on' : 'Auto-read is off'}
+          >
+            <SpeakerIcon className="w-5 h-5" />
+            <span className="text-sm font-semibold hidden sm:inline">
+              {autoRead ? 'Reading On' : 'Reading Off'}
+            </span>
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}
@@ -189,7 +249,7 @@ export default function Home() {
               {/* Alternative input methods */}
               <div className="mt-4 pt-3 flex gap-3" style={{ borderTop: '2px solid var(--bg-elevated)' }}>
                 <VoiceButton onTranscript={askQuestion} disabled={isLoading} compact />
-                <CameraButton disabled={isLoading} compact />
+                <CameraButton disabled={isLoading} compact isPaidUser={false} />
               </div>
             </div>
           </div>
@@ -293,7 +353,7 @@ export default function Home() {
 
               <div className="flex gap-3 mt-3">
                 <VoiceButton onTranscript={askQuestion} disabled={isLoading} compact />
-                <CameraButton disabled={isLoading} compact />
+                <CameraButton disabled={isLoading} compact isPaidUser={false} />
               </div>
             </div>
           </>
@@ -450,8 +510,38 @@ function VoiceButton({
   )
 }
 
-/* Camera Button */
-function CameraButton({ disabled, compact = false }: { disabled?: boolean, compact?: boolean }) {
+/* Camera Button - Disabled for free users */
+function CameraButton({
+  disabled,
+  compact = false,
+  isPaidUser = false,
+}: {
+  disabled?: boolean
+  compact?: boolean
+  isPaidUser?: boolean
+}) {
+  // Free users can't use camera
+  const isBlocked = !isPaidUser
+
+  if (isBlocked) {
+    return (
+      <button
+        disabled
+        className={`btn flex-1 ${compact ? 'py-3' : 'py-4'} text-lg opacity-60 cursor-not-allowed`}
+        style={{
+          background: 'var(--bg-elevated)',
+          color: 'var(--text-muted)',
+        }}
+        title="Upgrade for image analysis"
+        aria-label="Camera - upgrade required"
+      >
+        <LockIcon className="w-5 h-5" />
+        <CameraIcon className="w-6 h-6" />
+        <span className="hidden sm:inline">Upgrade</span>
+      </button>
+    )
+  }
+
   return (
     <a
       href="/camera"
@@ -503,6 +593,14 @@ function CameraIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
       <path d="M12 15.2c1.87 0 3.4-1.52 3.4-3.4 0-1.87-1.53-3.4-3.4-3.4-1.88 0-3.4 1.53-3.4 3.4 0 1.88 1.52 3.4 3.4 3.4zm8-10.8H16l-1.5-1.6c-.32-.34-.78-.5-1.24-.5h-2.52c-.46 0-.92.17-1.24.5L8 4.4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-12c0-1.1-.9-2-2-2zm-8 13.2c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+    </svg>
+  )
+}
+
+function LockIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
     </svg>
   )
 }

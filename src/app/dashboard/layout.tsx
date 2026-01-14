@@ -33,7 +33,7 @@ export default function DashboardLayout({
     )
   }
 
-  const isSenior = session?.user?.role === 'senior'
+  const isSenior = (session?.user as { role?: string } | undefined)?.role === 'senior'
 
   const navItems = [
     { href: '/dashboard', label: 'Overview', icon: HomeIcon },
