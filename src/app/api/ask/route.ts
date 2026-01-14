@@ -1,11 +1,41 @@
 import { getGemini, GEMINI_MODEL } from '@/lib/gemini'
 import { TECH_HELPER_SYSTEM_PROMPT } from '@/lib/prompts'
 import { containsBlockedContent, BLOCKED_RESPONSE } from '@/lib/guardrails'
-import { logEvent } from '@/lib/db'
+import { logEvent, db } from '@/lib/db'
+import { users, familyMembers, alerts } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { checkQuota, incrementQuota } from '@/lib/quota'
+import { sendPushToFamily } from '@/lib/push'
+
+interface ScamAnalysis {
+  probability: number
+  type: string | null
+  reason: string | null
+}
+
+// Parse scam analysis from AI response
+function parseScamAnalysis(response: string): { cleanResponse: string; scamAnalysis: ScamAnalysis | null } {
+  const scamRegex = /<<<SCAM_ANALYSIS>>>\s*([\s\S]*?)\s*<<<END_SCAM_ANALYSIS>>>/
+  const match = response.match(scamRegex)
+
+  if (!match) {
+    return { cleanResponse: response, scamAnalysis: null }
+  }
+
+  // Remove the scam analysis from the response
+  const cleanResponse = response.replace(scamRegex, '').trim()
+
+  try {
+    const scamAnalysis = JSON.parse(match[1]) as ScamAnalysis
+    return { cleanResponse, scamAnalysis }
+  } catch {
+    console.error('Failed to parse scam analysis JSON:', match[1])
+    return { cleanResponse, scamAnalysis: null }
+  }
+}
 
 interface Message {
   role: 'user' | 'assistant'
@@ -144,15 +174,75 @@ export async function POST(request: NextRequest) {
       throw new Error('Gemini returned empty response')
     }
 
-    const response = result.text
+    const rawResponse = result.text
+
+    // Parse scam analysis from response
+    const { cleanResponse, scamAnalysis } = parseScamAnalysis(rawResponse)
+
+    // If scam detected with high probability, create alert
+    if (scamAnalysis && scamAnalysis.probability >= 0.7) {
+      try {
+        // Look up senior's custom user ID by email
+        const authUserEmail = session.user.email
+        if (authUserEmail) {
+          const seniorUser = await db
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.email, authUserEmail))
+            .limit(1)
+
+          if (seniorUser.length > 0) {
+            // Look up senior's family
+            const membership = await db
+              .select({ familyId: familyMembers.familyId })
+              .from(familyMembers)
+              .where(eq(familyMembers.userId, seniorUser[0].id))
+              .limit(1)
+
+            if (membership.length > 0) {
+              // Create scam alert
+              await db.insert(alerts).values({
+                userId: seniorUser[0].id,
+                familyId: membership[0].familyId,
+                type: 'scam_detected',
+                scamProbability: String(scamAnalysis.probability),
+                aiAnalysis: `${scamAnalysis.type || 'Unknown scam type'}: ${scamAnalysis.reason || 'Potential scam detected'}. User question: "${question.substring(0, 200)}..."`,
+                acknowledged: false,
+              })
+
+              console.log(`Scam alert created: probability=${scamAnalysis.probability}, type=${scamAnalysis.type}`)
+
+              // Send push notification to family guardians
+              try {
+                await sendPushToFamily(membership[0].familyId, {
+                  title: '⚠️ Scam Alert',
+                  body: `${scamAnalysis.type || 'Potential scam'} detected. ${Math.round(scamAnalysis.probability * 100)}% confidence.`,
+                  tag: 'scam-alert',
+                  url: '/dashboard/alerts',
+                })
+              } catch (pushError) {
+                console.error('Failed to send push notification:', pushError)
+              }
+            }
+          }
+        }
+      } catch (alertError) {
+        // Don't fail the response if alert creation fails
+        console.error('Failed to create scam alert:', alertError)
+      }
+    }
 
     // Increment quota after successful response
     const updatedQuota = await incrementQuota(session.user.id)
 
     return NextResponse.json({
-      response,
+      response: cleanResponse,
       remaining: updatedQuota.remaining,
       limit: updatedQuota.limit,
+      scamDetected: scamAnalysis && scamAnalysis.probability >= 0.7 ? {
+        probability: scamAnalysis.probability,
+        type: scamAnalysis.type,
+      } : undefined,
     })
   } catch (error) {
     console.error('Error in /api/ask:', error)

@@ -225,3 +225,22 @@ export const usageQuotas = pgTable('usage_quotas', {
 
 export type UsageQuota = typeof usageQuotas.$inferSelect
 export type NewUsageQuota = typeof usageQuotas.$inferInsert
+
+// ============================================================================
+// PUSH SUBSCRIPTIONS (Web Push notifications for guardians)
+// ============================================================================
+
+export const pushSubscriptions = pgTable('push_subscriptions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  authUserId: text('auth_user_id').notNull(), // Better Auth user.id
+  endpoint: text('endpoint').notNull(),
+  p256dh: text('p256dh').notNull(), // Public key
+  auth: text('auth').notNull(), // Auth secret
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('push_subscriptions_auth_user_idx').on(table.authUserId),
+  index('push_subscriptions_endpoint_idx').on(table.endpoint),
+])
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect
+export type NewPushSubscription = typeof pushSubscriptions.$inferInsert

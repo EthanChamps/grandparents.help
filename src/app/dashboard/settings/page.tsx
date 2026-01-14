@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from '@/lib/auth-client'
 
 interface NotificationSettings {
@@ -10,12 +10,26 @@ interface NotificationSettings {
   alertThreshold: 'all' | 'high' | 'critical'
 }
 
+// Helper to convert base64 VAPID key
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  const outputArray = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i)
+  }
+  return outputArray
+}
+
 export default function SettingsPage() {
   const { data: session } = useSession()
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  const [pushPermission, setPushPermission] = useState<NotificationPermission>('default')
+  const [pushSubscribed, setPushSubscribed] = useState(false)
 
   const [settings, setSettings] = useState<NotificationSettings>({
     emailAlerts: true,
@@ -24,10 +38,27 @@ export default function SettingsPage() {
     alertThreshold: 'high',
   })
 
+  // Check push subscription status
+  const checkPushSubscription = useCallback(async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+
+    try {
+      if ('Notification' in window) {
+        setPushPermission(Notification.permission)
+      }
+      const registration = await navigator.serviceWorker.ready
+      const subscription = await registration.pushManager.getSubscription()
+      setPushSubscribed(!!subscription)
+    } catch (err) {
+      console.error('Error checking push subscription:', err)
+    }
+  }, [])
+
   // Load settings on mount
   useEffect(() => {
     fetchSettings()
-  }, [])
+    checkPushSubscription()
+  }, [checkPushSubscription])
 
   const fetchSettings = async () => {
     try {
@@ -78,6 +109,72 @@ export default function SettingsPage() {
       ...prev,
       [key]: !prev[key],
     }))
+  }
+
+  // Handle push notification toggle
+  const handlePushToggle = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      setError('Push notifications are not supported in your browser')
+      return
+    }
+
+    if (pushSubscribed) {
+      // Unsubscribe
+      try {
+        const registration = await navigator.serviceWorker.ready
+        const subscription = await registration.pushManager.getSubscription()
+        if (subscription) {
+          await fetch('/api/push/subscribe', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoint: subscription.endpoint }),
+          })
+          await subscription.unsubscribe()
+        }
+        setPushSubscribed(false)
+        setSettings(prev => ({ ...prev, pushNotifications: false }))
+      } catch (err) {
+        console.error('Unsubscribe error:', err)
+        setError('Failed to disable notifications')
+      }
+    } else {
+      // Subscribe
+      try {
+        const perm = await Notification.requestPermission()
+        setPushPermission(perm)
+
+        if (perm !== 'granted') {
+          setError('Permission denied. Please enable notifications in browser settings.')
+          return
+        }
+
+        const keyResponse = await fetch('/api/push/vapid-key')
+        const { vapidKey } = await keyResponse.json()
+
+        if (!vapidKey) {
+          setError('Push notifications not configured on server')
+          return
+        }
+
+        const registration = await navigator.serviceWorker.ready
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidKey) as BufferSource,
+        })
+
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscription: subscription.toJSON() }),
+        })
+
+        setPushSubscribed(true)
+        setSettings(prev => ({ ...prev, pushNotifications: true }))
+      } catch (err) {
+        console.error('Subscribe error:', err)
+        setError('Failed to enable notifications')
+      }
+    }
   }
 
   return (
@@ -138,12 +235,32 @@ export default function SettingsPage() {
             onToggle={() => toggleSetting('emailAlerts')}
           />
           <div className="dash-divider" />
-          <ToggleSetting
-            label="Push Notifications"
-            description="Browser push notifications for urgent alerts"
-            enabled={settings.pushNotifications}
-            onToggle={() => toggleSetting('pushNotifications')}
-          />
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>Push Notifications</p>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                {pushPermission === 'denied'
+                  ? 'Blocked in browser settings'
+                  : pushSubscribed
+                    ? 'Enabled for scam alerts'
+                    : 'Browser push notifications for urgent alerts'
+                }
+              </p>
+            </div>
+            <button
+              onClick={handlePushToggle}
+              disabled={pushPermission === 'denied'}
+              className={`dash-toggle ${pushSubscribed ? 'dash-toggle-on' : 'dash-toggle-off'}`}
+              role="switch"
+              aria-checked={pushSubscribed}
+              style={pushPermission === 'denied' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            >
+              <div
+                className="dash-toggle-knob"
+                style={{ left: pushSubscribed ? '22px' : '2px' }}
+              />
+            </button>
+          </div>
           <div className="dash-divider" />
           <ToggleSetting
             label="SMS Alerts"
