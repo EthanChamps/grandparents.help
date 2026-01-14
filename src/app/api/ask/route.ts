@@ -86,14 +86,65 @@ export async function POST(request: NextRequest) {
     ]
 
     const ai = getGemini()
-    const result = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents,
-    })
 
-    const response =
-      result.text ??
-      "I'm sorry, I couldn't understand that. Could you try asking in a different way?"
+    // Retry logic for transient 429 errors
+    let result
+    let lastError: Error | null = null
+    const maxRetries = 3
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        result = await ai.models.generateContent({
+          model: GEMINI_MODEL,
+          contents,
+        })
+        break // Success, exit retry loop
+      } catch (geminiError) {
+        lastError = geminiError instanceof Error ? geminiError : new Error(String(geminiError))
+        const errorMsg = lastError.message || ''
+
+        // Only retry on 429/rate limit errors
+        if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
+          console.log(`Gemini 429 error, attempt ${attempt}/${maxRetries}. Retrying in ${attempt * 2}s...`)
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, attempt * 2000)) // 2s, 4s, 6s backoff
+            continue
+          }
+        }
+
+        // Non-retryable error or max retries reached
+        console.error('Gemini API error:', geminiError)
+        throw new Error(`Gemini API failed: ${errorMsg}`)
+      }
+    }
+
+    if (!result && lastError) {
+      throw new Error(`Gemini API failed after ${maxRetries} retries: ${lastError.message}`)
+    }
+
+    // Check if we got a valid response
+    if (!result || !result.text) {
+      console.error('Gemini returned empty response:', {
+        hasResult: !!result,
+        hasText: !!result?.text,
+        candidates: result?.candidates,
+        finishReason: result?.candidates?.[0]?.finishReason,
+      })
+
+      // Check if blocked by safety filters
+      const finishReason = result?.candidates?.[0]?.finishReason
+      if (finishReason === 'SAFETY') {
+        return NextResponse.json({
+          response: "I can't help with that question. Please try asking something else about technology.",
+          remaining: (await checkQuota(session.user.id)).remaining,
+          limit: 15,
+        })
+      }
+
+      throw new Error('Gemini returned empty response')
+    }
+
+    const response = result.text
 
     // Increment quota after successful response
     const updatedQuota = await incrementQuota(session.user.id)
@@ -105,9 +156,33 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error in /api/ask:', error)
+
+    // More specific error messages for debugging
+    let errorMessage = 'Something went wrong. Please try again.'
+    let statusCode = 500
+
+    if (error instanceof Error) {
+      // Log full error for debugging
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      })
+
+      // Check for common issues
+      if (error.message.includes('API key')) {
+        errorMessage = 'Service configuration error. Please contact support.'
+      } else if (error.message.includes('429') || error.message.includes('RESOURCE_EXHAUSTED') || error.message.includes('quota') || error.message.includes('rate')) {
+        errorMessage = 'Our helper is taking a short break. Please wait 30 seconds and try again.'
+        statusCode = 503 // Service Unavailable - temporary
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection.'
+      }
+    }
+
     return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
+      { error: errorMessage },
+      { status: statusCode }
     )
   }
 }

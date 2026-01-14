@@ -158,44 +158,41 @@ export default function Home() {
 
   return (
     <div className="h-dvh flex flex-col safe-area-inset" style={{ background: 'var(--bg-deep)' }}>
-      {/* Header */}
-      <header className="px-6 py-4 flex items-center justify-between border-b" style={{ borderColor: 'var(--bg-elevated)' }}>
-        <div>
-          <h1 className="text-2xl font-extrabold" style={{ color: 'var(--amber-glow)' }}>
-            GuardRails
-          </h1>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Your friendly tech helper
-          </p>
-        </div>
+      {/* Compact Header - Essential controls only */}
+      <header className="px-3 py-2 flex items-center justify-between border-b" style={{ borderColor: 'var(--bg-elevated)' }}>
+        {/* Minimal branding - just icon/name */}
+        <span className="text-lg font-bold" style={{ color: 'var(--amber-glow)' }}>
+          GuardRails
+        </span>
 
-        <div className="flex items-center gap-3">
-          {/* Quota display */}
+        <div className="flex items-center gap-2">
+          {/* Quota - compact */}
           {quota && (
             <div
-              className="px-3 py-1.5 rounded-full text-sm font-semibold"
+              className="px-2.5 py-1 rounded-full text-xs font-bold"
               style={{
                 background: quota.remaining <= 3 ? 'var(--error)' : 'var(--bg-elevated)',
                 color: quota.remaining <= 3 ? 'white' : 'var(--text-secondary)',
               }}
             >
-              {quota.remaining}/{quota.limit} today
+              {quota.remaining}/{quota.limit}
             </div>
           )}
 
-          {/* Auto-read toggle */}
+          {/* Auto-read toggle - compact */}
           <button
             onClick={toggleAutoRead}
-            className="flex items-center gap-2 px-4 py-2 rounded-full transition-all"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all"
             style={{
               background: autoRead ? 'var(--amber-glow)' : 'var(--bg-elevated)',
               color: autoRead ? 'var(--bg-deep)' : 'var(--text-secondary)',
+              minHeight: '32px',
             }}
             aria-label={autoRead ? 'Auto-read is on' : 'Auto-read is off'}
           >
-            <SpeakerIcon className="w-5 h-5" />
-            <span className="text-sm font-semibold hidden sm:inline">
-              {autoRead ? 'Reading On' : 'Reading Off'}
+            <SpeakerIcon className="w-4 h-4" />
+            <span className="text-xs font-semibold">
+              {autoRead ? 'On' : 'Off'}
             </span>
           </button>
         </div>
@@ -254,31 +251,31 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          /* Conversation View */
+          /* Conversation View - Maximized for reading */
           <>
-            {/* Messages */}
+            {/* Messages - More space for content */}
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto p-4 space-y-4"
+              className="flex-1 overflow-y-auto px-3 py-3 space-y-3"
             >
               {messages.map((msg, idx) => (
                 <div
                   key={idx}
                   className={`animate-fade-in-up ${
-                    msg.role === 'user' ? 'ml-8' : 'mr-4'
+                    msg.role === 'user' ? 'ml-6' : ''
                   }`}
                   style={{ animationDelay: `${idx * 50}ms` }}
                 >
                   <div
-                    className="p-5 rounded-3xl"
+                    className="p-4 rounded-2xl"
                     style={{
                       background: msg.role === 'user' ? 'var(--bg-elevated)' : 'var(--bg-card)',
-                      border: msg.role === 'assistant' ? '3px solid var(--amber-glow)' : 'none',
+                      border: msg.role === 'assistant' ? '2px solid var(--amber-glow)' : 'none',
                     }}
                   >
-                    <p className="text-xs font-semibold mb-2 uppercase tracking-wide"
+                    <p className="text-xs font-semibold mb-1.5 uppercase tracking-wide"
                        style={{ color: 'var(--text-muted)' }}>
-                      {msg.role === 'user' ? 'You asked' : 'Answer'}
+                      {msg.role === 'user' ? 'You' : 'Answer'}
                     </p>
                     <div className="text-lg leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                       {msg.role === 'user' ? (
@@ -293,14 +290,14 @@ export default function Home() {
 
               {/* Loading */}
               {isLoading && (
-                <div className="mr-4 animate-fade-in-up">
-                  <div className="p-5 rounded-3xl" style={{ background: 'var(--bg-card)', border: '3px solid var(--bg-elevated)' }}>
-                    <div className="flex items-center gap-4">
+                <div className="animate-fade-in-up">
+                  <div className="p-4 rounded-2xl" style={{ background: 'var(--bg-card)', border: '2px solid var(--bg-elevated)' }}>
+                    <div className="flex items-center gap-3">
                       <div
-                        className="w-8 h-8 border-4 rounded-full animate-spin"
+                        className="w-6 h-6 border-3 rounded-full animate-spin"
                         style={{ borderColor: 'var(--amber-glow)', borderTopColor: 'transparent' }}
                       />
-                      <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+                      <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
                         Thinking...
                       </p>
                     </div>
@@ -309,66 +306,97 @@ export default function Home() {
               )}
             </div>
 
-            {/* Bottom Controls */}
-            <div className="shrink-0 p-4 border-t" style={{ background: 'var(--bg-card)', borderColor: 'var(--bg-elevated)' }}>
-              {/* Read/Stop button */}
+            {/* Compact Bottom Bar - Minimal footprint */}
+            <div className="shrink-0 px-3 py-2 border-t" style={{ background: 'var(--bg-card)', borderColor: 'var(--bg-elevated)' }}>
+              {/* Action buttons row - compact icons */}
               {latestResponse && (
-                <div className="flex gap-3 mb-4">
-                  <ReadAnswerButton
-                    onRead={() => speak(latestResponse)}
-                    onStop={stopSpeaking}
-                    isSpeaking={isSpeaking}
-                    status={ttsStatus}
-                  />
+                <div className="flex items-center gap-2 mb-2">
+                  {/* Read/Stop - compact version */}
+                  <button
+                    onClick={() => isSpeaking ? stopSpeaking() : speak(latestResponse)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-base font-semibold transition-all"
+                    style={{
+                      background: isSpeaking ? 'var(--error)' : 'var(--amber-glow)',
+                      color: isSpeaking ? 'white' : 'var(--bg-deep)',
+                      minHeight: '44px',
+                    }}
+                    aria-label={isSpeaking ? 'Stop reading' : 'Read answer aloud'}
+                  >
+                    {isSpeaking ? <StopIcon className="w-5 h-5" /> : <SpeakerIcon className="w-5 h-5" />}
+                    <span>{isSpeaking ? 'Stop' : 'Read'}</span>
+                  </button>
+
+                  {/* Voice input - icon only in conversation */}
+                  <VoiceButtonCompact onTranscript={askQuestion} disabled={isLoading} />
+
+                  {/* Spacer */}
+                  <div className="flex-1" />
+
+                  {/* New Topic - subtle */}
                   <button
                     onClick={clearHistory}
-                    className="btn btn-ghost px-6 py-4 text-lg"
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
+                    style={{
+                      background: 'var(--bg-elevated)',
+                      color: 'var(--text-secondary)',
+                      minHeight: '44px',
+                    }}
                   >
-                    New Topic
+                    <RefreshIcon className="w-4 h-4" />
+                    <span>New</span>
                   </button>
                 </div>
               )}
 
-              {/* Input Area */}
-              <div className="flex gap-3">
-                <textarea
+              {/* Compact Input Row */}
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask another question..."
-                  rows={2}
+                  placeholder="Ask a follow-up..."
                   disabled={isLoading}
-                  className="flex-1 input-large resize-none disabled:opacity-50"
+                  className="flex-1 px-4 py-3 rounded-xl text-base disabled:opacity-50"
+                  style={{
+                    background: 'var(--bg-elevated)',
+                    color: 'var(--text-primary)',
+                    border: '2px solid transparent',
+                    minHeight: '48px',
+                  }}
                   aria-label="Ask another question"
                 />
                 <button
                   onClick={() => askQuestion(inputValue)}
                   disabled={!inputValue.trim() || isLoading}
-                  className="btn btn-primary px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  style={{
+                    background: inputValue.trim() ? 'var(--amber-glow)' : 'var(--bg-elevated)',
+                    color: inputValue.trim() ? 'var(--bg-deep)' : 'var(--text-muted)',
+                    width: '48px',
+                    height: '48px',
+                  }}
                   aria-label="Send question"
                 >
-                  <SendIcon className="w-6 h-6" />
+                  <SendIcon className="w-5 h-5" />
                 </button>
-              </div>
-
-              <div className="flex gap-3 mt-3">
-                <VoiceButton onTranscript={askQuestion} disabled={isLoading} compact />
-                <CameraButton disabled={isLoading} compact isPaidUser={false} />
               </div>
             </div>
           </>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="shrink-0 px-6 py-2 text-center border-t" style={{ borderColor: 'var(--bg-elevated)' }}>
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-          Need urgent help?{' '}
-          <a href="tel:" className="underline" style={{ color: 'var(--amber-glow)' }}>
-            Call a family member
-          </a>
-        </p>
-      </footer>
+      {/* Footer - Only show on empty state */}
+      {!hasConversation && (
+        <footer className="shrink-0 px-6 py-2 text-center border-t" style={{ borderColor: 'var(--bg-elevated)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+            Need urgent help?{' '}
+            <a href="tel:" className="underline" style={{ color: 'var(--amber-glow)' }}>
+              Call a family member
+            </a>
+          </p>
+        </footer>
+      )}
     </div>
   )
 }
@@ -510,6 +538,80 @@ function VoiceButton({
   )
 }
 
+/* Compact Voice Button for conversation view - icon only */
+function VoiceButtonCompact({
+  onTranscript,
+  disabled,
+}: {
+  onTranscript: (text: string) => void
+  disabled?: boolean
+}) {
+  const [isListening, setIsListening] = useState(false)
+  const [isSupported, setIsSupported] = useState(false)
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
+
+  useEffect(() => {
+    setIsSupported(typeof window !== 'undefined' &&
+      !!(window.SpeechRecognition || window.webkitSpeechRecognition))
+  }, [])
+
+  const startListening = useCallback(() => {
+    if (!isSupported || disabled || isListening) return
+
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition
+    const recognition = new SpeechRecognitionAPI()
+    recognition.continuous = false
+    recognition.interimResults = false
+    recognition.lang = 'en-GB'
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript
+      onTranscript(transcript)
+      setIsListening(false)
+    }
+
+    recognition.onerror = () => setIsListening(false)
+    recognition.onend = () => setIsListening(false)
+
+    recognitionRef.current = recognition
+    recognition.start()
+    setIsListening(true)
+
+    if (navigator.vibrate) {
+      navigator.vibrate(50)
+    }
+  }, [isSupported, disabled, isListening, onTranscript])
+
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop()
+      setIsListening(false)
+    }
+  }, [isListening])
+
+  if (!isSupported) {
+    return null // Hide if not supported
+  }
+
+  return (
+    <button
+      onClick={isListening ? stopListening : startListening}
+      disabled={disabled}
+      className="flex items-center justify-center rounded-xl disabled:opacity-50 transition-all"
+      style={{
+        background: isListening ? 'var(--error)' : 'var(--bg-elevated)',
+        color: isListening ? 'white' : 'var(--text-primary)',
+        width: '44px',
+        height: '44px',
+        animation: isListening ? 'pulse-soft 1s ease-in-out infinite' : 'none',
+      }}
+      aria-label={isListening ? 'Stop listening' : 'Speak your question'}
+    >
+      <MicIcon className="w-5 h-5" />
+    </button>
+  )
+}
+
 /* Camera Button - Disabled for free users */
 function CameraButton({
   disabled,
@@ -601,6 +703,22 @@ function LockIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
       <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+    </svg>
+  )
+}
+
+function StopIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M6 6h12v12H6z"/>
+    </svg>
+  )
+}
+
+function RefreshIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
     </svg>
   )
 }

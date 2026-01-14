@@ -4,12 +4,14 @@ let geminiClient: GoogleGenAI | null = null
 
 export function getGemini(): GoogleGenAI {
   if (!geminiClient) {
-    geminiClient = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY!,
-    })
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY environment variable is not set')
+    }
+    geminiClient = new GoogleGenAI({ apiKey })
   }
   return geminiClient
 }
 
-// Using Gemini 2.0 Flash - smallest and fastest model
-export const GEMINI_MODEL = 'gemini-2.0-flash'
+// Using Gemini 2.5 Flash - latest stable model (2.0 deprecated March 2026)
+export const GEMINI_MODEL = 'gemini-2.5-flash'
