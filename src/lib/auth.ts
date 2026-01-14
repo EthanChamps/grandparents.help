@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { magicLink } from 'better-auth/plugins'
+import { Pool } from 'pg'
 import { Resend } from 'resend'
 
 // Lazy init to avoid build-time errors when API key not available
@@ -12,11 +13,10 @@ function getResend() {
 }
 
 export const auth = betterAuth({
-  // Use Neon Postgres - Better Auth handles the connection
-  database: {
-    type: 'postgres',
-    url: process.env.DATABASE_URL!,
-  },
+  // Use pg Pool for Neon Postgres
+  database: new Pool({
+    connectionString: process.env.DATABASE_URL,
+  }),
 
   // Email + password for family members
   emailAndPassword: {
@@ -39,7 +39,7 @@ export const auth = betterAuth({
     magicLink({
       sendMagicLink: async ({ email, url }) => {
         await getResend().emails.send({
-          from: 'GuardRails <noreply@grandparents.help>',
+          from: 'GuardRails <noreply@kingshotauto.com>',
           to: email,
           subject: 'Your login link for GuardRails',
           html: `
