@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { useTTS } from '@/hooks/useTTS'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -12,9 +13,11 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [autoRead, setAutoRead] = useState(true)
-  const [isSpeaking, setIsSpeaking] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const previousResponseRef = useRef<string | undefined>(undefined)
+
+  // Kokoro TTS hook
+  const { speak, stop: stopSpeaking, isSpeaking, status: ttsStatus, loadProgress } = useTTS()
 
   const latestResponse = messages.filter((m) => m.role === 'assistant').pop()?.content
 
@@ -25,35 +28,6 @@ export default function Home() {
     }
   }, [messages])
 
-  // Text-to-speech
-  const speak = useCallback((text: string) => {
-    if (!('speechSynthesis' in window)) return
-
-    speechSynthesis.cancel()
-
-    const plainText = text
-      .replace(/\*\*/g, '')
-      .replace(/\*/g, '')
-      .replace(/#{1,6}\s/g, '')
-      .replace(/`/g, '')
-
-    const utterance = new SpeechSynthesisUtterance(plainText)
-    utterance.rate = 0.85
-    utterance.pitch = 1
-    utterance.lang = 'en-GB'
-
-    utterance.onstart = () => setIsSpeaking(true)
-    utterance.onend = () => setIsSpeaking(false)
-    utterance.onerror = () => setIsSpeaking(false)
-
-    speechSynthesis.speak(utterance)
-  }, [])
-
-  const stopSpeaking = useCallback(() => {
-    speechSynthesis.cancel()
-    setIsSpeaking(false)
-  }, [])
-
   // Auto-speak new responses when autoRead is enabled
   useEffect(() => {
     if (autoRead && latestResponse && latestResponse !== previousResponseRef.current && !isLoading) {
@@ -61,13 +35,6 @@ export default function Home() {
       speak(latestResponse)
     }
   }, [latestResponse, isLoading, speak, autoRead])
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      speechSynthesis.cancel()
-    }
-  }, [])
 
   const askQuestion = useCallback(
     async (question: string) => {
@@ -281,14 +248,29 @@ export default function Home() {
                 <div className="flex gap-3 mb-4">
                   <button
                     onClick={() => isSpeaking ? stopSpeaking() : speak(latestResponse)}
-                    className="flex-1 btn py-4 text-lg"
+                    disabled={ttsStatus === 'loading-model' || ttsStatus === 'generating'}
+                    className="flex-1 btn py-4 text-lg disabled:opacity-70"
                     style={{
-                      background: isSpeaking ? 'var(--error)' : 'var(--bg-elevated)',
-                      color: isSpeaking ? 'white' : 'var(--text-primary)',
+                      background: isSpeaking ? 'var(--error)' : ttsStatus === 'loading-model' ? 'var(--amber-glow)' : 'var(--bg-elevated)',
+                      color: isSpeaking || ttsStatus === 'loading-model' ? 'white' : 'var(--text-primary)',
                     }}
                   >
-                    <SpeakerIcon className="w-6 h-6" />
-                    {isSpeaking ? 'Stop Reading' : 'Read Answer'}
+                    {ttsStatus === 'loading-model' ? (
+                      <>
+                        <LoadingSpinner className="w-5 h-5" />
+                        Loading Voice...
+                      </>
+                    ) : ttsStatus === 'generating' ? (
+                      <>
+                        <LoadingSpinner className="w-5 h-5" />
+                        Preparing...
+                      </>
+                    ) : (
+                      <>
+                        <SpeakerIcon className="w-6 h-6" />
+                        {isSpeaking ? 'Stop Reading' : 'Read Answer'}
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={clearHistory}
@@ -533,6 +515,15 @@ function CameraIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
       <path d="M12 15.2c1.87 0 3.4-1.52 3.4-3.4 0-1.87-1.53-3.4-3.4-3.4-1.88 0-3.4 1.53-3.4 3.4 0 1.88 1.52 3.4 3.4 3.4zm8-10.8H16l-1.5-1.6c-.32-.34-.78-.5-1.24-.5h-2.52c-.46 0-.92.17-1.24.5L8 4.4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-12c0-1.1-.9-2-2-2zm-8 13.2c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+    </svg>
+  )
+}
+
+function LoadingSpinner({ className }: { className?: string }) {
+  return (
+    <svg className={`${className} animate-spin`} fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
     </svg>
   )
 }
