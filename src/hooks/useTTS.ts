@@ -47,18 +47,21 @@ async function loadKokoro(): Promise<KokoroTTSType> {
   return kokoroLoadingPromise
 }
 
-// Preload model in background on app startup
+// Preload model immediately on app startup
 export function preloadTTS(): void {
   if (preloadStarted || typeof window === 'undefined') return
   preloadStarted = true
 
-  // Start loading after a short delay to not block initial render
-  setTimeout(() => {
-    loadKokoro().catch((err) => {
-      console.warn('TTS preload failed:', err)
-      preloadStarted = false // Allow retry
-    })
-  }, 1000)
+  // Start loading immediately
+  loadKokoro().catch((err) => {
+    console.warn('TTS preload failed:', err)
+    preloadStarted = false // Allow retry
+  })
+}
+
+// Auto-preload when module is imported (client-side only)
+if (typeof window !== 'undefined') {
+  preloadTTS()
 }
 
 export function useTTS(): UseTTSReturn {
