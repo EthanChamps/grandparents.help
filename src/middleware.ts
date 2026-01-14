@@ -43,7 +43,10 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL('/', request.url))
+    // Family auth goes to dashboard, senior auth goes to home
+    const isFamilyAuth = pathname.startsWith('/auth/family')
+    const redirectUrl = isFamilyAuth ? '/dashboard' : '/'
+    return NextResponse.redirect(new URL(redirectUrl, request.url))
   }
 
   return NextResponse.next()
