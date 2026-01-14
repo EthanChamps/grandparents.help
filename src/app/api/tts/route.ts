@@ -3,6 +3,13 @@ import { getGemini } from '@/lib/gemini'
 
 const TTS_MODEL = 'gemini-2.5-flash-preview-tts'
 
+const MAX_RETRIES = 3
+const RETRY_DELAY = 1000 // 1 second
+
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { text } = await request.json()
@@ -22,40 +29,53 @@ export async function POST(request: NextRequest) {
 
     const ai = getGemini()
 
-    const response = await ai.models.generateContent({
-      model: TTS_MODEL,
-      contents: [{ parts: [{ text: plainText }] }],
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' }, // Warm, clear voice
+    // Retry logic for unstable Gemini TTS preview
+    let lastError: Error | null = null
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          model: TTS_MODEL,
+          contents: [{ parts: [{ text: plainText }] }],
+          config: {
+            responseModalities: ['AUDIO'],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: 'Kore' },
+              },
+            },
           },
-        },
-      },
-    })
+        })
 
-    // Extract audio data
-    const candidate = response.candidates?.[0]
-    const audioPart = candidate?.content?.parts?.[0]
+        // Extract audio data
+        const candidate = response.candidates?.[0]
+        const audioPart = candidate?.content?.parts?.[0]
 
-    if (!audioPart || !('inlineData' in audioPart) || !audioPart.inlineData?.data) {
-      return NextResponse.json({ error: 'No audio generated' }, { status: 500 })
+        if (!audioPart || !('inlineData' in audioPart) || !audioPart.inlineData?.data) {
+          throw new Error('No audio generated')
+        }
+
+        const audioBase64 = audioPart.inlineData.data
+        const pcmBuffer = Buffer.from(audioBase64, 'base64')
+        const wavBuffer = createWavBuffer(pcmBuffer, 24000, 1, 16)
+
+        return new NextResponse(new Uint8Array(wavBuffer), {
+          headers: {
+            'Content-Type': 'audio/wav',
+            'Content-Length': wavBuffer.length.toString(),
+          },
+        })
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err))
+        console.warn(`TTS attempt ${attempt}/${MAX_RETRIES} failed:`, lastError.message)
+
+        if (attempt < MAX_RETRIES) {
+          await sleep(RETRY_DELAY * attempt) // Exponential backoff
+        }
+      }
     }
 
-    const audioBase64 = audioPart.inlineData.data
-
-    // Convert base64 PCM to WAV with proper headers
-    const pcmBuffer = Buffer.from(audioBase64, 'base64')
-    const wavBuffer = createWavBuffer(pcmBuffer, 24000, 1, 16)
-
-    // Return as audio/wav
-    return new NextResponse(new Uint8Array(wavBuffer), {
-      headers: {
-        'Content-Type': 'audio/wav',
-        'Content-Length': wavBuffer.length.toString(),
-      },
-    })
+    // All retries failed
+    throw lastError || new Error('TTS generation failed')
   } catch (error) {
     console.error('TTS error:', error)
     return NextResponse.json(
