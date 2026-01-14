@@ -98,20 +98,20 @@ export default function FamilyPage() {
   }
 
   return (
-    <div className="space-y-6 dash-stagger">
+    <div className="space-y-4 sm:space-y-6 dash-stagger">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+          <h1 className="text-xl sm:text-2xl font-bold mb-0.5 sm:mb-1" style={{ color: 'var(--text-primary)' }}>
             Family Members
           </h1>
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            Manage linked family members and invite seniors
+          <p className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>
+            Manage linked family and invite seniors
           </p>
         </div>
         <button
           onClick={() => setShowInviteModal(true)}
-          className="dash-btn dash-btn-primary flex items-center gap-2"
+          className="dash-btn dash-btn-primary flex items-center gap-2 w-full sm:w-auto"
         >
           <PlusIcon className="w-4 h-4" />
           Invite Senior
@@ -161,26 +161,26 @@ export default function FamilyPage() {
       {/* How It Works */}
       <div className="dash-card">
         <div className="dash-section-header">
-          <h2 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="font-semibold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
             How Family Linking Works
           </h2>
         </div>
-        <div className="p-5">
-          <div className="grid md:grid-cols-3 gap-4">
+        <div className="p-3 sm:p-5">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
             <StepCard
               number={1}
               title="Send Invite"
-              description="Enter your parent's email or phone number to send a magic link"
+              description="Enter your parent's email or phone to send a magic link"
             />
             <StepCard
               number={2}
               title="They Sign In"
-              description="They click the link to access the simplified senior interface"
+              description="They click the link to access the simplified interface"
             />
             <StepCard
               number={3}
               title="Stay Protected"
-              description="You'll receive alerts when potential scams are detected"
+              description="You'll receive alerts when scams are detected"
             />
           </div>
         </div>
@@ -210,10 +210,10 @@ function MemberRow({
   const timeAgo = member.lastActive ? getTimeAgo(new Date(member.lastActive)) : 'Never'
 
   return (
-    <div className="flex items-center gap-4 p-4"
+    <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4"
          style={!isLast ? { borderBottom: '1px solid rgba(255, 255, 255, 0.06)' } : {}}>
       <div
-        className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold flex-shrink-0"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0"
         style={{
           background: isGuardian
             ? 'linear-gradient(135deg, var(--amber-glow) 0%, #d97706 100%)'
@@ -224,8 +224,8 @@ function MemberRow({
         {member.name?.charAt(0) || '?'}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <span className="font-medium text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
             {member.name}
           </span>
           <span className={`dash-badge ${isGuardian ? 'dash-badge-warning' : 'dash-badge-muted'}`}>
@@ -235,27 +235,27 @@ function MemberRow({
             <span className="dash-badge dash-badge-muted">Pending</span>
           )}
         </div>
-        <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+        <p className="text-xs sm:text-sm mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>
           {member.email || member.phone}
         </p>
       </div>
-      <div className="flex items-center gap-3 flex-shrink-0">
-        <div className="text-right hidden sm:block">
+      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        <div className="text-right hidden md:block">
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Last active</p>
-          <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{timeAgo}</p>
+          <p className="text-xs sm:text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{timeAgo}</p>
         </div>
         {!isCurrentUser && (
           <button
             onClick={onRemove}
             disabled={isRemoving}
             className="dash-btn dash-btn-ghost p-2"
-            style={{ color: 'var(--error)' }}
+            style={{ color: 'var(--error)', minHeight: '44px', minWidth: '44px' }}
             title={member.status === 'pending' ? 'Cancel invite' : 'Remove member'}
           >
             {isRemoving ? (
-              <LoadingSpinner className="w-4 h-4" />
+              <LoadingSpinner className="w-4 h-4 sm:w-5 sm:h-5" />
             ) : (
-              <TrashIcon className="w-4 h-4" />
+              <TrashIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             )}
           </button>
         )}
@@ -266,9 +266,9 @@ function MemberRow({
 
 function StepCard({ number, title, description }: { number: number; title: string; description: string }) {
   return (
-    <div className="p-4 rounded-xl" style={{ background: 'var(--bg-elevated)' }}>
+    <div className="p-3 sm:p-4 rounded-lg sm:rounded-xl" style={{ background: 'var(--bg-elevated)' }}>
       <div
-        className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold mb-3"
+        className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold mb-2 sm:mb-3"
         style={{
           background: 'linear-gradient(135deg, var(--amber-glow) 0%, #d97706 100%)',
           color: 'var(--bg-deep)',
@@ -276,8 +276,8 @@ function StepCard({ number, title, description }: { number: number; title: strin
       >
         {number}
       </div>
-      <p className="font-semibold text-sm mb-1" style={{ color: 'var(--text-primary)' }}>{title}</p>
-      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{description}</p>
+      <p className="font-semibold text-xs sm:text-sm mb-0.5 sm:mb-1" style={{ color: 'var(--text-primary)' }}>{title}</p>
+      <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{description}</p>
     </div>
   )
 }
@@ -323,14 +323,14 @@ function InviteModal({ onClose, onInvite }: { onClose: () => void; onInvite: () 
   return (
     <div className="dash-modal-overlay" onClick={onClose}>
       <div className="dash-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="dash-section-header" style={{ borderRadius: '16px 16px 0 0' }}>
+        <div className="dash-modal-header">
           <h2 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
             Invite a Senior
           </h2>
           <button
             onClick={onClose}
             className="dash-btn dash-btn-ghost"
-            style={{ padding: '0.375rem' }}
+            style={{ padding: '0.5rem', minHeight: '44px', minWidth: '44px' }}
           >
             <CloseIcon className="w-5 h-5" />
           </button>
@@ -342,7 +342,7 @@ function InviteModal({ onClose, onInvite }: { onClose: () => void; onInvite: () 
               background: 'linear-gradient(135deg, rgba(74, 222, 128, 0.15) 0%, rgba(74, 222, 128, 0.05) 100%)',
               border: '1px solid rgba(74, 222, 128, 0.2)',
             }}>
-              <CheckIcon className="w-7 h-7" style={{ color: 'var(--success)' }} />
+              <CheckIcon className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: 'var(--success)' }} />
             </div>
             <p className="dash-empty-title">Invite sent!</p>
             <p className="dash-empty-desc">
@@ -350,9 +350,9 @@ function InviteModal({ onClose, onInvite }: { onClose: () => void; onInvite: () 
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-5 space-y-5">
+          <form onSubmit={handleSubmit} className="dash-modal-body space-y-4 sm:space-y-5">
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+              <label className="block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2" style={{ color: 'var(--text-primary)' }}>
                 Senior's Name
               </label>
               <input
@@ -362,14 +362,15 @@ function InviteModal({ onClose, onInvite }: { onClose: () => void; onInvite: () 
                 placeholder="e.g. Mom, Dad, Grandma"
                 required
                 className="dash-input"
+                autoFocus
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+              <label className="block text-xs sm:text-sm font-medium mb-1.5 sm:mb-2" style={{ color: 'var(--text-primary)' }}>
                 Contact Method
               </label>
-              <div className="dash-tabs mb-3" style={{ display: 'inline-flex' }}>
+              <div className="dash-tabs mb-2 sm:mb-3" style={{ display: 'inline-flex' }}>
                 <button
                   type="button"
                   onClick={() => setInviteMethod('email')}
@@ -382,7 +383,7 @@ function InviteModal({ onClose, onInvite }: { onClose: () => void; onInvite: () 
                   onClick={() => setInviteMethod('phone')}
                   className={`dash-tab ${inviteMethod === 'phone' ? 'dash-tab-active' : ''}`}
                 >
-                  Phone (SMS)
+                  Phone
                 </button>
               </div>
               <input
@@ -396,13 +397,14 @@ function InviteModal({ onClose, onInvite }: { onClose: () => void; onInvite: () 
             </div>
 
             {error && (
-              <p className="text-sm" style={{ color: 'var(--error)' }}>{error}</p>
+              <p className="text-xs sm:text-sm" style={{ color: 'var(--error)' }}>{error}</p>
             )}
 
             <button
               type="submit"
               disabled={isSending}
               className="dash-btn dash-btn-primary w-full"
+              style={{ minHeight: '48px' }}
             >
               {isSending ? 'Sending...' : 'Send Invite'}
             </button>

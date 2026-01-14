@@ -54,48 +54,48 @@ export default function DashboardLayout({
         top: 0,
         zIndex: 40,
       }}>
-        <div className="max-w-5xl mx-auto px-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           {/* Top Bar */}
-          <div className="h-16 flex items-center justify-between">
-            <Link href="/dashboard" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+          <div className="h-14 sm:h-16 flex items-center justify-between">
+            <Link href="/dashboard" className="flex items-center gap-2 sm:gap-3 group">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0"
                    style={{
                      background: 'linear-gradient(135deg, var(--amber-glow) 0%, #d97706 100%)',
                      boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)',
                    }}>
-                <ShieldIcon className="w-5 h-5" style={{ color: 'var(--bg-deep)' }} />
+                <ShieldIcon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'var(--bg-deep)' }} />
               </div>
-              <div>
-                <span className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm sm:text-base" style={{ color: 'var(--text-primary)' }}>
                   GuardRails
                 </span>
-                <span className="ml-2 text-xs px-2 py-0.5 rounded-md"
+                <span className="hidden sm:inline text-xs px-2 py-0.5 rounded-md"
                       style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
                   Family
                 </span>
               </div>
             </Link>
 
-            <div className="flex items-center gap-4">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg"
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg"
                    style={{ background: 'var(--bg-elevated)' }}>
                 <div className="w-2 h-2 rounded-full" style={{ background: 'var(--success)' }} />
-                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                <span className="text-xs truncate max-w-[150px]" style={{ color: 'var(--text-secondary)' }}>
                   {session?.user?.email}
                 </span>
               </div>
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="dash-btn dash-btn-ghost"
+                className="dash-btn dash-btn-ghost text-xs sm:text-sm"
               >
                 {isLoggingOut ? 'Signing out...' : 'Sign Out'}
               </button>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex gap-1 -mb-px">
+          {/* Navigation Tabs - Hidden on mobile, shown on md+ */}
+          <nav className="hidden md:flex gap-1 -mb-px">
             {navItems.map(({ href, label, icon: Icon }) => {
               const isActive = pathname === href
               return (
@@ -120,10 +120,29 @@ export default function DashboardLayout({
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      {/* Main Content - Add padding for mobile bottom nav */}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8 pb-20 md:pb-8">
         {children}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="mobile-bottom-nav md:hidden">
+        <div className="mobile-bottom-nav-inner">
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const isActive = pathname === href
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`mobile-nav-item ${isActive ? 'active' : ''}`}
+              >
+                <Icon className="mobile-nav-icon" />
+                <span className="mobile-nav-label">{label}</span>
+              </Link>
+            )
+          })}
+        </div>
+      </nav>
     </div>
   )
 }

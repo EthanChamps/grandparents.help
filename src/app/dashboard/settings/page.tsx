@@ -178,42 +178,42 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 dash-stagger">
+    <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6 dash-stagger">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+        <h1 className="text-xl sm:text-2xl font-bold mb-0.5 sm:mb-1" style={{ color: 'var(--text-primary)' }}>
           Settings
         </h1>
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-          Manage your notification preferences and account
+        <p className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>
+          Manage notifications and account
         </p>
       </div>
 
       {/* Account Section */}
       <div className="dash-card">
         <div className="dash-section-header">
-          <h2 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="font-semibold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
             Account
           </h2>
         </div>
-        <div className="p-5 space-y-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>Email</p>
-              <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+        <div className="p-3 sm:p-5 space-y-3 sm:space-y-5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="font-medium text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>Email</p>
+              <p className="text-xs sm:text-sm mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>
                 {session?.user?.email}
               </p>
             </div>
           </div>
           <div className="dash-divider" />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>Name</p>
-              <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="font-medium text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>Name</p>
+              <p className="text-xs sm:text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                 {session?.user?.name || 'Not set'}
               </p>
             </div>
-            <button className="dash-btn dash-btn-ghost">
+            <button className="dash-btn dash-btn-ghost flex-shrink-0">
               Edit
             </button>
           </div>
@@ -223,11 +223,11 @@ export default function SettingsPage() {
       {/* Notifications Section */}
       <div className="dash-card">
         <div className="dash-section-header">
-          <h2 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="font-semibold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
             Notifications
           </h2>
         </div>
-        <div className="p-5 space-y-5">
+        <div className="p-3 sm:p-5 space-y-3 sm:space-y-5">
           <ToggleSetting
             label="Email Alerts"
             description="Receive alerts via email"
@@ -235,22 +235,22 @@ export default function SettingsPage() {
             onToggle={() => toggleSetting('emailAlerts')}
           />
           <div className="dash-divider" />
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>Push Notifications</p>
-              <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+          <div className="flex items-center justify-between gap-3 sm:gap-4">
+            <div className="min-w-0">
+              <p className="font-medium text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>Push Notifications</p>
+              <p className="text-xs sm:text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
                 {pushPermission === 'denied'
-                  ? 'Blocked in browser settings'
+                  ? 'Blocked in browser'
                   : pushSubscribed
                     ? 'Enabled for scam alerts'
-                    : 'Browser push notifications for urgent alerts'
+                    : 'Push alerts for urgent issues'
                 }
               </p>
             </div>
             <button
               onClick={handlePushToggle}
               disabled={pushPermission === 'denied'}
-              className={`dash-toggle ${pushSubscribed ? 'dash-toggle-on' : 'dash-toggle-off'}`}
+              className={`dash-toggle ${pushSubscribed ? 'dash-toggle-on' : 'dash-toggle-off'} flex-shrink-0`}
               role="switch"
               aria-checked={pushSubscribed}
               style={pushPermission === 'denied' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
@@ -264,7 +264,7 @@ export default function SettingsPage() {
           <div className="dash-divider" />
           <ToggleSetting
             label="SMS Alerts"
-            description="Text message alerts for critical scam detections"
+            description="Text alerts for critical scams"
             enabled={settings.smsAlerts}
             onToggle={() => toggleSetting('smsAlerts')}
           />
@@ -272,20 +272,20 @@ export default function SettingsPage() {
           <div className="dash-divider" />
 
           <div>
-            <p className="font-medium text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+            <p className="font-medium text-xs sm:text-sm mb-0.5 sm:mb-1" style={{ color: 'var(--text-primary)' }}>
               Alert Sensitivity
             </p>
-            <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-xs sm:text-sm mb-2 sm:mb-4" style={{ color: 'var(--text-muted)' }}>
               Choose which alerts trigger notifications
             </p>
-            <div className="dash-tabs" style={{ display: 'inline-flex' }}>
+            <div className="dash-tabs flex-wrap" style={{ display: 'inline-flex' }}>
               {(['all', 'high', 'critical'] as const).map((threshold) => (
                 <button
                   key={threshold}
                   onClick={() => setSettings((prev) => ({ ...prev, alertThreshold: threshold }))}
                   className={`dash-tab ${settings.alertThreshold === threshold ? 'dash-tab-active' : ''}`}
                 >
-                  {threshold === 'all' ? 'All Alerts' : threshold === 'high' ? 'High Risk' : 'Critical Only'}
+                  {threshold === 'all' ? 'All' : threshold === 'high' ? 'High' : 'Critical'}
                 </button>
               ))}
             </div>
@@ -296,48 +296,48 @@ export default function SettingsPage() {
       {/* Subscription Section */}
       <div className="dash-card">
         <div className="dash-section-header">
-          <h2 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="font-semibold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
             Subscription
           </h2>
         </div>
-        <div className="p-5">
-          <div className="flex items-center justify-between">
+        <div className="p-3 sm:p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>Current Plan</p>
+                <p className="font-medium text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>Current Plan</p>
                 <span className="dash-badge dash-badge-success">Active</span>
               </div>
-              <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-xs sm:text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                 Free Trial
               </p>
             </div>
-            <button className="dash-btn dash-btn-primary">
+            <button className="dash-btn dash-btn-primary w-full sm:w-auto">
               Upgrade
             </button>
           </div>
-          <p className="text-xs mt-4" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-xs mt-3 sm:mt-4" style={{ color: 'var(--text-muted)' }}>
             Billing management coming soon
           </p>
         </div>
       </div>
 
       {/* Save Button */}
-      <div className="flex items-center gap-4 pt-2">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 pt-2">
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="dash-btn dash-btn-primary"
-          style={{ padding: '0.75rem 1.5rem' }}
+          className="dash-btn dash-btn-primary w-full sm:w-auto"
+          style={{ padding: '0.75rem 1.5rem', minHeight: '48px' }}
         >
           {isSaving ? 'Saving...' : 'Save Changes'}
         </button>
         {saved && (
-          <span className="text-sm font-medium" style={{ color: 'var(--success)' }}>
+          <span className="text-xs sm:text-sm font-medium text-center sm:text-left" style={{ color: 'var(--success)' }}>
             Settings saved!
           </span>
         )}
         {error && (
-          <span className="text-sm font-medium" style={{ color: 'var(--error)' }}>
+          <span className="text-xs sm:text-sm font-medium text-center sm:text-left" style={{ color: 'var(--error)' }}>
             {error}
           </span>
         )}
@@ -358,14 +358,14 @@ function ToggleSetting({
   onToggle: () => void
 }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <div>
-        <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>{label}</p>
-        <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{description}</p>
+    <div className="flex items-center justify-between gap-3 sm:gap-4">
+      <div className="min-w-0">
+        <p className="font-medium text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>{label}</p>
+        <p className="text-xs sm:text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{description}</p>
       </div>
       <button
         onClick={onToggle}
-        className={`dash-toggle ${enabled ? 'dash-toggle-on' : 'dash-toggle-off'}`}
+        className={`dash-toggle ${enabled ? 'dash-toggle-on' : 'dash-toggle-off'} flex-shrink-0`}
         role="switch"
         aria-checked={enabled}
       >

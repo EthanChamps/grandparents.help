@@ -61,37 +61,37 @@ export default function FamilyAuthPage() {
     >
       {/* Header */}
       <header
-        className="px-6 py-4 border-b"
+        className="px-4 sm:px-6 py-3 sm:py-4 border-b"
         style={{ borderColor: 'var(--bg-elevated)' }}
       >
         <h1
-          className="text-2xl font-extrabold"
+          className="text-xl sm:text-2xl font-extrabold"
           style={{ color: 'var(--amber-glow)' }}
         >
           GuardRails
         </h1>
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+        <p className="text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
           Family Dashboard
         </p>
       </header>
 
       {/* Main */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
         <div className="w-full max-w-md">
           <form onSubmit={handleSubmit}>
-            <div className="card p-8">
-              <div className="text-center mb-6">
+            <div className="card">
+              <div className="text-center mb-4 sm:mb-6">
                 <div
-                  className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4"
+                  className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full mb-3 sm:mb-4"
                   style={{ background: 'var(--bg-elevated)' }}
                 >
                   <FamilyIcon
-                    className="w-8 h-8"
+                    className="w-7 h-7 sm:w-8 sm:h-8"
                     style={{ color: 'var(--amber-glow)' }}
                   />
                 </div>
                 <h2
-                  className="text-xl font-bold"
+                  className="text-lg sm:text-xl font-bold"
                   style={{ color: 'var(--text-primary)' }}
                 >
                   {mode === 'login' ? 'Family Sign In' : 'Create Account'}
@@ -100,16 +100,17 @@ export default function FamilyAuthPage() {
 
               {/* Mode Toggle */}
               <div
-                className="flex rounded-xl mb-6 p-1"
+                className="flex rounded-xl mb-4 sm:mb-6 p-1"
                 style={{ background: 'var(--bg-elevated)' }}
               >
                 <button
                   type="button"
                   onClick={() => setMode('login')}
-                  className="flex-1 py-3 rounded-lg font-semibold transition-all"
+                  className="flex-1 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold transition-all"
                   style={{
                     background: mode === 'login' ? 'var(--amber-glow)' : 'transparent',
                     color: mode === 'login' ? 'var(--bg-deep)' : 'var(--text-secondary)',
+                    minHeight: '44px',
                   }}
                 >
                   Sign In
@@ -117,10 +118,11 @@ export default function FamilyAuthPage() {
                 <button
                   type="button"
                   onClick={() => setMode('register')}
-                  className="flex-1 py-3 rounded-lg font-semibold transition-all"
+                  className="flex-1 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold transition-all"
                   style={{
                     background: mode === 'register' ? 'var(--amber-glow)' : 'transparent',
                     color: mode === 'register' ? 'var(--bg-deep)' : 'var(--text-secondary)',
+                    minHeight: '44px',
                   }}
                 >
                   Register
@@ -129,10 +131,10 @@ export default function FamilyAuthPage() {
 
               {/* Name (register only) */}
               {mode === 'register' && (
-                <div className="mb-4">
+                <div className="mb-3 sm:mb-4">
                   <label
                     htmlFor="name"
-                    className="block text-sm font-semibold mb-2"
+                    className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     Your Name
@@ -151,10 +153,10 @@ export default function FamilyAuthPage() {
               )}
 
               {/* Email */}
-              <div className="mb-4">
+              <div className="mb-3 sm:mb-4">
                 <label
                   htmlFor="email"
-                  className="block text-sm font-semibold mb-2"
+                  className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2"
                   style={{ color: 'var(--text-secondary)' }}
                 >
                   Email Address
@@ -172,10 +174,10 @@ export default function FamilyAuthPage() {
               </div>
 
               {/* Password */}
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <label
                   htmlFor="password"
-                  className="block text-sm font-semibold mb-2"
+                  className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2"
                   style={{ color: 'var(--text-secondary)' }}
                 >
                   Password
@@ -196,10 +198,10 @@ export default function FamilyAuthPage() {
               {/* Error */}
               {error && (
                 <div
-                  className="p-4 rounded-xl mb-6 text-center"
+                  className="p-3 sm:p-4 rounded-xl mb-4 sm:mb-6 text-center"
                   style={{ background: 'var(--error)', color: 'white' }}
                 >
-                  <p className="font-semibold">{error}</p>
+                  <p className="font-semibold text-sm sm:text-base">{error}</p>
                 </div>
               )}
 
@@ -207,7 +209,8 @@ export default function FamilyAuthPage() {
               <button
                 type="submit"
                 disabled={isLoading || !email.trim() || !password.trim() || (mode === 'register' && !name.trim())}
-                className="w-full btn btn-primary py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full btn btn-primary py-3 sm:py-4 text-base sm:text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ minHeight: '56px' }}
               >
                 {isLoading ? (
                   <>
@@ -225,7 +228,7 @@ export default function FamilyAuthPage() {
 
           {/* Senior link */}
           <p
-            className="text-center mt-6"
+            className="text-center mt-4 sm:mt-6 text-sm sm:text-base"
             style={{ color: 'var(--text-muted)' }}
           >
             Are you a senior?{' '}

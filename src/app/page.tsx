@@ -159,39 +159,43 @@ export default function Home() {
   return (
     <div className="h-dvh flex flex-col safe-area-inset" style={{ background: 'var(--bg-deep)' }}>
       {/* Compact Header - Essential controls only */}
-      <header className="px-3 py-2 flex items-center justify-between border-b" style={{ borderColor: 'var(--bg-elevated)' }}>
+      <header className="px-4 sm:px-6 py-3 flex items-center justify-between border-b" style={{ borderColor: 'var(--bg-elevated)' }}>
         {/* Minimal branding - just icon/name */}
-        <span className="text-lg font-bold" style={{ color: 'var(--amber-glow)' }}>
+        <span className="text-base sm:text-lg font-bold" style={{ color: 'var(--amber-glow)' }}>
           GuardRails
         </span>
 
-        <div className="flex items-center gap-2">
-          {/* Quota - compact */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Quota - compact but readable */}
           {quota && (
             <div
-              className="px-2.5 py-1 rounded-full text-xs font-bold"
+              className="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold"
               style={{
                 background: quota.remaining <= 3 ? 'var(--error)' : 'var(--bg-elevated)',
                 color: quota.remaining <= 3 ? 'white' : 'var(--text-secondary)',
+                minHeight: '36px',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
               {quota.remaining}/{quota.limit}
             </div>
           )}
 
-          {/* Auto-read toggle - compact */}
+          {/* Auto-read toggle - accessible touch target */}
           <button
             onClick={toggleAutoRead}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full transition-all"
             style={{
               background: autoRead ? 'var(--amber-glow)' : 'var(--bg-elevated)',
               color: autoRead ? 'var(--bg-deep)' : 'var(--text-secondary)',
-              minHeight: '32px',
+              minHeight: '44px',
+              minWidth: '44px',
             }}
             aria-label={autoRead ? 'Auto-read is on' : 'Auto-read is off'}
           >
-            <SpeakerIcon className="w-4 h-4" />
-            <span className="text-xs font-semibold">
+            <SpeakerIcon className="w-5 h-5" />
+            <span className="text-xs sm:text-sm font-semibold">
               {autoRead ? 'On' : 'Off'}
             </span>
           </button>
@@ -202,22 +206,22 @@ export default function Home() {
       <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {!hasConversation ? (
           /* Empty State - Hero Input */
-          <div className="flex-1 flex flex-col items-center justify-center overflow-y-auto px-4 py-4 stagger-children">
-            <div className="w-full max-w-xl text-center mb-4 shrink-0">
-              <h2 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+          <div className="flex-1 flex flex-col items-center justify-center overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 stagger-children">
+            <div className="w-full max-w-xl text-center mb-4 sm:mb-6 shrink-0">
+              <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2" style={{ color: 'var(--text-primary)' }}>
                 What do you need help with?
               </h2>
-              <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
                 Ask me anything about technology.
               </p>
             </div>
 
             {/* Hero Input Card */}
-            <div className="w-full max-w-xl card p-5 glow-amber shrink-0">
+            <div className="w-full max-w-xl card glow-amber shrink-0">
               {/* Input label */}
               <label
                 htmlFor="main-question-input"
-                className="block text-base font-bold mb-2"
+                className="block text-sm sm:text-base font-bold mb-2 sm:mb-3"
                 style={{ color: 'var(--amber-soft)' }}
               >
                 Type your question below:
@@ -229,22 +233,24 @@ export default function Home() {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="For example: How do I scan a QR code?"
-                rows={2}
-                className="w-full input-large resize-none mb-3"
+                rows={3}
+                className="w-full input-large resize-none mb-3 sm:mb-4"
+                style={{ fontSize: '1rem' }}
                 aria-label="Type your question"
               />
 
               <button
                 onClick={() => askQuestion(inputValue)}
                 disabled={!inputValue.trim() || isLoading}
-                className="w-full btn btn-primary py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full btn btn-primary py-4 sm:py-5 text-base sm:text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ minHeight: '60px' }}
               >
-                <SendIcon className="w-5 h-5" />
+                <SendIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                 {isLoading ? 'Thinking...' : 'Ask Question'}
               </button>
 
               {/* Alternative input methods */}
-              <div className="mt-4 pt-3 flex gap-3" style={{ borderTop: '2px solid var(--bg-elevated)' }}>
+              <div className="mt-4 pt-3 sm:pt-4 flex flex-col sm:flex-row gap-2 sm:gap-3" style={{ borderTop: '2px solid var(--bg-elevated)' }}>
                 <VoiceButton onTranscript={askQuestion} disabled={isLoading} compact />
                 <CameraButton disabled={isLoading} compact isPaidUser={false} />
               </div>
@@ -256,28 +262,28 @@ export default function Home() {
             {/* Messages - More space for content */}
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto px-3 py-3 space-y-3"
+              className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4 space-y-3 sm:space-y-4"
             >
               {messages.map((msg, idx) => (
                 <div
                   key={idx}
                   className={`animate-fade-in-up ${
-                    msg.role === 'user' ? 'ml-6' : ''
+                    msg.role === 'user' ? 'ml-4 sm:ml-6' : ''
                   }`}
                   style={{ animationDelay: `${idx * 50}ms` }}
                 >
                   <div
-                    className="p-4 rounded-2xl"
+                    className="p-3 sm:p-4 rounded-xl sm:rounded-2xl"
                     style={{
                       background: msg.role === 'user' ? 'var(--bg-elevated)' : 'var(--bg-card)',
                       border: msg.role === 'assistant' ? '2px solid var(--amber-glow)' : 'none',
                     }}
                   >
-                    <p className="text-xs font-semibold mb-1.5 uppercase tracking-wide"
+                    <p className="text-xs font-semibold mb-1 sm:mb-1.5 uppercase tracking-wide"
                        style={{ color: 'var(--text-muted)' }}>
                       {msg.role === 'user' ? 'You' : 'Answer'}
                     </p>
-                    <div className="text-lg leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+                    <div className="text-base sm:text-lg leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                       {msg.role === 'user' ? (
                         msg.content
                       ) : (
@@ -291,13 +297,13 @@ export default function Home() {
               {/* Loading */}
               {isLoading && (
                 <div className="animate-fade-in-up">
-                  <div className="p-4 rounded-2xl" style={{ background: 'var(--bg-card)', border: '2px solid var(--bg-elevated)' }}>
+                  <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl" style={{ background: 'var(--bg-card)', border: '2px solid var(--bg-elevated)' }}>
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-6 h-6 border-3 rounded-full animate-spin"
+                        className="w-6 h-6 border-3 rounded-full animate-spin flex-shrink-0"
                         style={{ borderColor: 'var(--amber-glow)', borderTopColor: 'transparent' }}
                       />
-                      <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
+                      <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
                         Thinking...
                       </p>
                     </div>
@@ -307,18 +313,18 @@ export default function Home() {
             </div>
 
             {/* Compact Bottom Bar - Minimal footprint */}
-            <div className="shrink-0 px-3 py-2 border-t" style={{ background: 'var(--bg-card)', borderColor: 'var(--bg-elevated)' }}>
-              {/* Action buttons row - compact icons */}
+            <div className="shrink-0 px-3 sm:px-4 py-2 sm:py-3 border-t" style={{ background: 'var(--bg-card)', borderColor: 'var(--bg-elevated)' }}>
+              {/* Action buttons row - touch-friendly */}
               {latestResponse && (
-                <div className="flex items-center gap-2 mb-2">
-                  {/* Read/Stop - compact version */}
+                <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                  {/* Read/Stop - prominent touch target */}
                   <button
                     onClick={() => isSpeaking ? stopSpeaking() : speak(latestResponse)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-base font-semibold transition-all"
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all"
                     style={{
                       background: isSpeaking ? 'var(--error)' : 'var(--amber-glow)',
                       color: isSpeaking ? 'white' : 'var(--bg-deep)',
-                      minHeight: '44px',
+                      minHeight: '52px',
                     }}
                     aria-label={isSpeaking ? 'Stop reading' : 'Read answer aloud'}
                   >
@@ -332,18 +338,18 @@ export default function Home() {
                   {/* Spacer */}
                   <div className="flex-1" />
 
-                  {/* New Topic - subtle */}
+                  {/* New Topic - subtle but accessible */}
                   <button
                     onClick={clearHistory}
                     className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
                     style={{
                       background: 'var(--bg-elevated)',
                       color: 'var(--text-secondary)',
-                      minHeight: '44px',
+                      minHeight: '52px',
                     }}
                   >
-                    <RefreshIcon className="w-4 h-4" />
-                    <span>New</span>
+                    <RefreshIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">New</span>
                   </button>
                 </div>
               )}
@@ -357,24 +363,24 @@ export default function Home() {
                   onKeyDown={handleKeyDown}
                   placeholder="Ask a follow-up..."
                   disabled={isLoading}
-                  className="flex-1 px-4 py-3 rounded-xl text-base disabled:opacity-50"
+                  className="flex-1 px-3 sm:px-4 py-3 rounded-xl text-sm sm:text-base disabled:opacity-50"
                   style={{
                     background: 'var(--bg-elevated)',
                     color: 'var(--text-primary)',
                     border: '2px solid transparent',
-                    minHeight: '48px',
+                    minHeight: '52px',
                   }}
                   aria-label="Ask another question"
                 />
                 <button
                   onClick={() => askQuestion(inputValue)}
                   disabled={!inputValue.trim() || isLoading}
-                  className="flex items-center justify-center rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center justify-center rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all flex-shrink-0"
                   style={{
                     background: inputValue.trim() ? 'var(--amber-glow)' : 'var(--bg-elevated)',
                     color: inputValue.trim() ? 'var(--bg-deep)' : 'var(--text-muted)',
-                    width: '48px',
-                    height: '48px',
+                    width: '52px',
+                    height: '52px',
                   }}
                   aria-label="Send question"
                 >
@@ -388,10 +394,10 @@ export default function Home() {
 
       {/* Footer - Only show on empty state */}
       {!hasConversation && (
-        <footer className="shrink-0 px-6 py-2 text-center border-t" style={{ borderColor: 'var(--bg-elevated)' }}>
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+        <footer className="shrink-0 px-4 sm:px-6 py-3 text-center border-t" style={{ borderColor: 'var(--bg-elevated)' }}>
+          <p className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>
             Need urgent help?{' '}
-            <a href="tel:" className="underline" style={{ color: 'var(--amber-glow)' }}>
+            <a href="tel:" className="underline font-medium" style={{ color: 'var(--amber-glow)' }}>
               Call a family member
             </a>
           </p>
@@ -512,10 +518,11 @@ function VoiceButton({
     return (
       <button
         disabled
-        className={`btn btn-secondary flex-1 ${compact ? 'py-3' : 'py-4'} opacity-50 cursor-not-allowed`}
+        className={`btn btn-secondary flex-1 ${compact ? 'py-3 sm:py-4' : 'py-4'} opacity-50 cursor-not-allowed`}
+        style={{ minHeight: '56px' }}
       >
-        <MicIcon className="w-6 h-6" />
-        <span>Not Available</span>
+        <MicIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+        <span className="text-sm sm:text-base">Not Available</span>
       </button>
     )
   }
@@ -524,15 +531,16 @@ function VoiceButton({
     <button
       onClick={isListening ? stopListening : startListening}
       disabled={disabled}
-      className={`btn flex-1 ${compact ? 'py-3' : 'py-4'} text-lg disabled:opacity-50`}
+      className={`btn flex-1 ${compact ? 'py-3 sm:py-4' : 'py-4'} text-sm sm:text-lg disabled:opacity-50`}
       style={{
         background: isListening ? 'var(--error)' : 'var(--bg-elevated)',
         color: isListening ? 'white' : 'var(--text-primary)',
         animation: isListening ? 'pulse-soft 1s ease-in-out infinite' : 'none',
+        minHeight: '56px',
       }}
       aria-label={isListening ? 'Stop listening' : 'Speak your question'}
     >
-      <MicIcon className="w-6 h-6" />
+      <MicIcon className="w-5 h-5 sm:w-6 sm:h-6" />
       <span>{isListening ? 'Listening...' : 'Speak'}</span>
     </button>
   )
@@ -597,12 +605,12 @@ function VoiceButtonCompact({
     <button
       onClick={isListening ? stopListening : startListening}
       disabled={disabled}
-      className="flex items-center justify-center rounded-xl disabled:opacity-50 transition-all"
+      className="flex items-center justify-center rounded-xl disabled:opacity-50 transition-all flex-shrink-0"
       style={{
         background: isListening ? 'var(--error)' : 'var(--bg-elevated)',
         color: isListening ? 'white' : 'var(--text-primary)',
-        width: '44px',
-        height: '44px',
+        width: '52px',
+        height: '52px',
         animation: isListening ? 'pulse-soft 1s ease-in-out infinite' : 'none',
       }}
       aria-label={isListening ? 'Stop listening' : 'Speak your question'}
@@ -629,17 +637,18 @@ function CameraButton({
     return (
       <button
         disabled
-        className={`btn flex-1 ${compact ? 'py-3' : 'py-4'} text-lg opacity-60 cursor-not-allowed`}
+        className={`btn flex-1 ${compact ? 'py-3 sm:py-4' : 'py-4'} text-sm sm:text-lg opacity-60 cursor-not-allowed`}
         style={{
           background: 'var(--bg-elevated)',
           color: 'var(--text-muted)',
+          minHeight: '56px',
         }}
         title="Upgrade for image analysis"
         aria-label="Camera - upgrade required"
       >
-        <LockIcon className="w-5 h-5" />
-        <CameraIcon className="w-6 h-6" />
-        <span className="hidden sm:inline">Upgrade</span>
+        <LockIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+        <CameraIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+        <span>Upgrade</span>
       </button>
     )
   }
@@ -647,12 +656,13 @@ function CameraButton({
   return (
     <a
       href="/camera"
-      className={`btn btn-primary flex-1 ${compact ? 'py-3' : 'py-4'} text-lg ${
+      className={`btn btn-primary flex-1 ${compact ? 'py-3 sm:py-4' : 'py-4'} text-sm sm:text-lg ${
         disabled ? 'pointer-events-none opacity-50' : ''
       }`}
+      style={{ minHeight: '56px' }}
       aria-label="Take a photo to ask about"
     >
-      <CameraIcon className="w-6 h-6" />
+      <CameraIcon className="w-5 h-5 sm:w-6 sm:h-6" />
       <span>Show Me</span>
     </a>
   )

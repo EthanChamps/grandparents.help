@@ -66,20 +66,20 @@ export default function AlertsPage() {
   }
 
   return (
-    <div className="space-y-6 dash-stagger">
+    <div className="space-y-4 sm:space-y-6 dash-stagger">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+          <h1 className="text-xl sm:text-2xl font-bold mb-0.5 sm:mb-1" style={{ color: 'var(--text-primary)' }}>
             Security Alerts
           </h1>
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            Review potential scam detections and suspicious activity
+          <p className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>
+            Review potential scam detections
           </p>
         </div>
 
         {/* Filter Tabs */}
-        <div className="dash-tabs">
+        <div className="dash-tabs self-start sm:self-auto">
           <button
             onClick={() => setFilter('unread')}
             className={`dash-tab ${filter === 'unread' ? 'dash-tab-active' : ''}`}
@@ -163,21 +163,21 @@ function AlertCard({
   return (
     <div className="dash-card dash-card-hover"
          style={!alert.acknowledged ? { border: `1px solid ${config.border}` } : {}}>
-      <div className="p-5">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+      <div className="p-3 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
           {/* Severity Icon */}
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0"
                style={{
                  background: config.bg,
                  color: severity === 'low' ? 'var(--text-secondary)' : 'white',
                }}>
-            <AlertIcon className="w-6 h-6" />
+            <AlertIcon className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+              <span className="font-semibold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
                 {alert.seniorName}
               </span>
               <span className={`dash-badge ${config.badge}`}>
@@ -188,11 +188,11 @@ function AlertCard({
               )}
             </div>
 
-            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               {alert.aiAnalysis}
             </p>
 
-            <p className="text-xs mt-3" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-xs mt-2 sm:mt-3" style={{ color: 'var(--text-muted)' }}>
               {date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at {date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
@@ -201,7 +201,7 @@ function AlertCard({
           {!alert.acknowledged && (
             <button
               onClick={onAcknowledge}
-              className="dash-btn dash-btn-secondary flex-shrink-0"
+              className="dash-btn dash-btn-secondary flex-shrink-0 w-full sm:w-auto mt-2 sm:mt-0"
             >
               Mark as Read
             </button>
@@ -210,14 +210,14 @@ function AlertCard({
 
         {/* Image Preview */}
         {alert.imageUrl && (
-          <div className="mt-4 p-4 rounded-xl" style={{ background: 'var(--bg-elevated)' }}>
-            <p className="text-xs font-medium mb-3" style={{ color: 'var(--text-muted)' }}>
+          <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-lg sm:rounded-xl" style={{ background: 'var(--bg-elevated)' }}>
+            <p className="text-xs font-medium mb-2 sm:mb-3" style={{ color: 'var(--text-muted)' }}>
               Scanned Image
             </p>
             <img
               src={alert.imageUrl}
               alt="Scanned content"
-              className="max-h-48 rounded-lg"
+              className="max-h-36 sm:max-h-48 rounded-lg w-full object-contain"
               style={{ border: '1px solid rgba(255, 255, 255, 0.06)' }}
             />
           </div>

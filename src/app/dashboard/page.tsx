@@ -64,46 +64,46 @@ export default function DashboardOverview() {
   }
 
   return (
-    <div className="space-y-8 dash-stagger">
+    <div className="space-y-4 sm:space-y-8 dash-stagger">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+        <h1 className="text-xl sm:text-2xl font-bold mb-0.5 sm:mb-1" style={{ color: 'var(--text-primary)' }}>
           Dashboard
         </h1>
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>
           Monitor your family members' activity and safety
         </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Grid - Responsive columns */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
         <StatCard
           label="Unread Alerts"
           value={stats?.unacknowledgedAlerts ?? 0}
-          icon={<AlertIcon className="w-5 h-5" />}
+          icon={<AlertIcon className="w-4 h-4 sm:w-5 sm:h-5" />}
           variant={stats?.unacknowledgedAlerts && stats.unacknowledgedAlerts > 0 ? 'error' : 'default'}
         />
         <StatCard
           label="Total Alerts"
           value={stats?.totalAlerts ?? 0}
-          icon={<BellIcon className="w-5 h-5" />}
+          icon={<BellIcon className="w-4 h-4 sm:w-5 sm:h-5" />}
           variant="default"
         />
         <StatCard
           label="Linked Seniors"
           value={stats?.linkedSeniors ?? 0}
-          icon={<UsersIcon className="w-5 h-5" />}
+          icon={<UsersIcon className="w-4 h-4 sm:w-5 sm:h-5" />}
           variant="default"
         />
         <StatCard
           label="Questions (7d)"
           value={stats?.recentQuestions ?? 0}
-          icon={<ChatIcon className="w-5 h-5" />}
+          icon={<ChatIcon className="w-4 h-4 sm:w-5 sm:h-5" />}
           variant="default"
         />
       </div>
 
-      {/* Alert Banner */}
+      {/* Alert Banner - Responsive layout */}
       {stats?.unacknowledgedAlerts && stats.unacknowledgedAlerts > 0 && (
         <div className="dash-alert-banner">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -111,14 +111,14 @@ export default function DashboardOverview() {
             <AlertIcon className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+            <p className="font-semibold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
               {stats.unacknowledgedAlerts} unread alert{stats.unacknowledgedAlerts > 1 ? 's' : ''} require attention
             </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-xs mt-0.5 hidden sm:block" style={{ color: 'var(--text-secondary)' }}>
               Potential scam detected - review immediately
             </p>
           </div>
-          <Link href="/dashboard/alerts" className="dash-btn dash-btn-primary flex-shrink-0">
+          <Link href="/dashboard/alerts" className="dash-btn dash-btn-primary flex-shrink-0 w-full sm:w-auto">
             View Alerts
           </Link>
         </div>
@@ -203,17 +203,17 @@ function ActivityItem({ activity, isLast }: { activity: Activity; isLast: boolea
   const timeAgo = getTimeAgo(date)
 
   return (
-    <div className="flex gap-4 p-4" style={!isLast ? { borderBottom: '1px solid rgba(255, 255, 255, 0.06)' } : {}}>
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+    <div className="flex gap-3 sm:gap-4 p-3 sm:p-4" style={!isLast ? { borderBottom: '1px solid rgba(255, 255, 255, 0.06)' } : {}}>
+      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0"
            style={{
              background: isAlert ? 'var(--error)' : 'var(--bg-elevated)',
              color: isAlert ? 'white' : 'var(--text-secondary)',
            }}>
-        {isAlert ? <AlertIcon className="w-5 h-5" /> : <ChatIcon className="w-5 h-5" />}
+        {isAlert ? <AlertIcon className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChatIcon className="w-4 h-4 sm:w-5 sm:h-5" />}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <span className="font-medium text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
             {activity.seniorName}
           </span>
           {isAlert && (
@@ -223,11 +223,11 @@ function ActivityItem({ activity, isLast }: { activity: Activity; isLast: boolea
             {timeAgo}
           </span>
         </div>
-        <p className="text-sm mt-1 truncate" style={{ color: 'var(--text-secondary)' }}>
+        <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
           {activity.content}
         </p>
         {activity.scamProbability !== undefined && activity.scamProbability > 0.5 && (
-          <p className="text-xs mt-1.5" style={{ color: 'var(--error)' }}>
+          <p className="text-xs mt-1 sm:mt-1.5" style={{ color: 'var(--error)' }}>
             Scam probability: {Math.round(activity.scamProbability * 100)}%
           </p>
         )}

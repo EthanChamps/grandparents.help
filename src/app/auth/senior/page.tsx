@@ -215,40 +215,40 @@ function SeniorAuthContent() {
     >
       {/* Header */}
       <header
-        className="px-6 py-4 border-b"
+        className="px-4 sm:px-6 py-3 sm:py-4 border-b"
         style={{ borderColor: 'var(--bg-elevated)' }}
       >
         <h1
-          className="text-2xl font-extrabold"
+          className="text-xl sm:text-2xl font-extrabold"
           style={{ color: 'var(--amber-glow)' }}
         >
           GuardRails
         </h1>
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+        <p className="text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
           {inviteData ? 'Accept your invitation' : 'Sign in to get help'}
         </p>
       </header>
 
       {/* Main */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
         <div className="w-full max-w-md">
           {status === 'sent' || status === 'accepted' ? (
             /* Success State */
-            <div className="card p-8 text-center glow-amber">
+            <div className="card text-center glow-amber">
               <div
-                className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6"
+                className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full mb-4 sm:mb-6"
                 style={{ background: 'var(--success)', color: 'white' }}
               >
-                <CheckIcon className="w-10 h-10" />
+                <CheckIcon className="w-8 h-8 sm:w-10 sm:h-10" />
               </div>
               <h2
-                className="text-2xl font-bold mb-4"
+                className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4"
                 style={{ color: 'var(--text-primary)' }}
               >
                 {status === 'accepted' ? 'Welcome to GuardRails!' : 'Check Your Email'}
               </h2>
               <p
-                className="text-xl mb-6"
+                className="text-base sm:text-xl mb-4 sm:mb-6"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 {status === 'accepted'
@@ -256,7 +256,7 @@ function SeniorAuthContent() {
                   : 'We sent a sign-in link to:'}
               </p>
               <p
-                className="text-xl font-bold mb-8 p-4 rounded-xl"
+                className="text-base sm:text-xl font-bold mb-6 sm:mb-8 p-3 sm:p-4 rounded-xl break-all"
                 style={{
                   background: 'var(--bg-elevated)',
                   color: 'var(--amber-glow)',
@@ -264,7 +264,7 @@ function SeniorAuthContent() {
               >
                 {email}
               </p>
-              <p style={{ color: 'var(--text-muted)' }}>
+              <p className="text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>
                 Click the link in your email to sign in.
                 <br />
                 The link expires in 15 minutes.
@@ -276,7 +276,7 @@ function SeniorAuthContent() {
                   setEmail('')
                   setInviteData(null)
                 }}
-                className="btn btn-ghost mt-8 w-full py-4 text-lg"
+                className="btn btn-ghost mt-6 sm:mt-8 w-full py-3 sm:py-4 text-base sm:text-lg"
               >
                 Use a different email
               </button>
@@ -284,16 +284,16 @@ function SeniorAuthContent() {
           ) : (
             /* Form State */
             <form onSubmit={handleSubmit}>
-              <div className="card p-8 glow-amber">
-                <div className="text-center mb-8">
+              <div className="card glow-amber">
+                <div className="text-center mb-6 sm:mb-8">
                   <div
-                    className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6"
+                    className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full mb-4 sm:mb-6"
                     style={{ background: inviteData ? 'var(--success)' : 'var(--bg-elevated)' }}
                   >
                     {inviteData ? (
-                      <PartyIcon className="w-10 h-10" style={{ color: 'white' }} />
+                      <PartyIcon className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'white' }} />
                     ) : (
-                      <EmailIcon className="w-10 h-10" style={{ color: 'var(--amber-glow)' }} />
+                      <EmailIcon className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--amber-glow)' }} />
                     )}
                   </div>
 
@@ -301,13 +301,13 @@ function SeniorAuthContent() {
                     /* Invite welcome */
                     <>
                       <h2
-                        className="text-2xl font-bold mb-2"
+                        className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2"
                         style={{ color: 'var(--text-primary)' }}
                       >
                         Welcome, {inviteData.name}!
                       </h2>
                       <p
-                        className="text-lg"
+                        className="text-base sm:text-lg"
                         style={{ color: 'var(--text-secondary)' }}
                       >
                         Your family invited you to GuardRails.
@@ -319,13 +319,13 @@ function SeniorAuthContent() {
                     /* Regular sign in */
                     <>
                       <h2
-                        className="text-2xl font-bold mb-2"
+                        className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2"
                         style={{ color: 'var(--text-primary)' }}
                       >
                         Welcome Back
                       </h2>
                       <p
-                        className="text-lg"
+                        className="text-base sm:text-lg"
                         style={{ color: 'var(--text-secondary)' }}
                       >
                         No password needed!
@@ -333,7 +333,7 @@ function SeniorAuthContent() {
                         We&apos;ll email you a sign-in link.
                       </p>
                       <p
-                        className="text-sm mt-3"
+                        className="text-xs sm:text-sm mt-2 sm:mt-3"
                         style={{ color: 'var(--text-muted)' }}
                       >
                         New here? Ask a family member to invite you.
@@ -345,7 +345,7 @@ function SeniorAuthContent() {
                 {/* Email Input */}
                 <label
                   htmlFor="email"
-                  className="block text-lg font-bold mb-3"
+                  className="block text-base sm:text-lg font-bold mb-2 sm:mb-3"
                   style={{ color: 'var(--amber-soft)' }}
                 >
                   {inviteData ? 'Confirm Your Email:' : 'Your Email Address:'}
@@ -356,8 +356,8 @@ function SeniorAuthContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full input-large mb-6"
-                  style={{ fontSize: '1.25rem', padding: '1.25rem' }}
+                  className="w-full input-large mb-4 sm:mb-6"
+                  style={{ fontSize: '1rem' }}
                   required
                   autoComplete="email"
                   autoFocus={!inviteData?.email}
@@ -366,10 +366,10 @@ function SeniorAuthContent() {
                 {/* Error */}
                 {error && (
                   <div
-                    className="p-4 rounded-xl mb-6 text-center"
+                    className="p-3 sm:p-4 rounded-xl mb-4 sm:mb-6 text-center"
                     style={{ background: 'var(--error)', color: 'white' }}
                   >
-                    <p className="font-bold">{error}</p>
+                    <p className="font-bold text-sm sm:text-base">{error}</p>
                   </div>
                 )}
 
@@ -377,21 +377,22 @@ function SeniorAuthContent() {
                 <button
                   type="submit"
                   disabled={!email.trim() || status === 'sending' || status === 'accepting'}
-                  className="w-full btn btn-primary py-6 text-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full btn btn-primary py-4 sm:py-6 text-base sm:text-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ minHeight: '60px' }}
                 >
                   {status === 'sending' || status === 'accepting' ? (
                     <>
-                      <LoadingSpinner className="w-6 h-6" />
+                      <LoadingSpinner className="w-5 h-5 sm:w-6 sm:h-6" />
                       {status === 'accepting' ? 'Setting up...' : 'Sending...'}
                     </>
                   ) : inviteData ? (
                     <>
-                      <CheckIcon className="w-6 h-6" />
+                      <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                       Join GuardRails
                     </>
                   ) : (
                     <>
-                      <SendIcon className="w-6 h-6" />
+                      <SendIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                       Send Sign-In Link
                     </>
                   )}
@@ -399,11 +400,11 @@ function SeniorAuthContent() {
 
                 {/* What is GuardRails - shown for invites */}
                 {inviteData && (
-                  <div className="mt-8 p-4 rounded-xl" style={{ background: 'var(--bg-elevated)' }}>
-                    <p className="text-sm font-bold mb-2" style={{ color: 'var(--amber-glow)' }}>
+                  <div className="mt-6 sm:mt-8 p-3 sm:p-4 rounded-xl" style={{ background: 'var(--bg-elevated)' }}>
+                    <p className="text-xs sm:text-sm font-bold mb-1 sm:mb-2" style={{ color: 'var(--amber-glow)' }}>
                       What is GuardRails?
                     </p>
-                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    <p className="text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                       GuardRails helps you stay safe online. Ask questions about technology,
                       or scan suspicious messages to check if they&apos;re scams.
                       Your family will be notified if we detect something dangerous.
@@ -417,7 +418,7 @@ function SeniorAuthContent() {
           {/* Family link - only show if not an invite flow */}
           {!inviteData && (
             <p
-              className="text-center mt-8"
+              className="text-center mt-6 sm:mt-8 text-sm sm:text-base"
               style={{ color: 'var(--text-muted)' }}
             >
               Are you a family member?{' '}
